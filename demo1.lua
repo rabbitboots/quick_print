@@ -131,7 +131,7 @@ function love.draw()
 	qp:printfSingle(colored_text, "left")
 	--qp:printf(colored_text, "left")
 
-	qp:down(8)
+	qp:down(4)
 
 	--[[
 	The act of printing memory usage in Lua typically causes the reported number to increase as

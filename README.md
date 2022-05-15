@@ -387,13 +387,13 @@ Version of `qp:print()` that takes one sequence (array table).
 
 Versions of `qp:print()` which take exactly 1 to 4 arguments. Additional arguments are ignored.
 
-`qp:print(s1)`
+`qp:print1(s1)`
 
-`qp:print(s1, s2)`
+`qp:print2(s1, s2)`
 
-`qp:print(s1, s2, s3)`
+`qp:print3(s1, s2, s3)`
 
-`qp:print(s1, s2, s3, s4)`
+`qp:print4(s1, s2, s3, s4)`
 
 
 * `s1`: The first value to write.

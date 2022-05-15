@@ -1,6 +1,9 @@
 # quick_print.lua
 
-QuickPrint is a text drawing library for [LÖVE](https://love2d.org/)
+QuickPrint is a text drawing library for the [LÖVE](https://love2d.org/) Framework.
+
+
+![quickprint_gh_1](https://user-images.githubusercontent.com/23288188/168460007-1d08b8ba-3893-4e07-a01b-21a2f3332a8e.png)
 
 
 ## Features
@@ -39,7 +42,7 @@ Check out the demo files for more examples.
 
 QuickPrint updates an internal cursor position with every draw. When virtual tab stops are enabled, the next write is positioned relative to the current tab X position. It can draw text to the screen/canvas, or add text to a LÖVE Text object.
 
-Functions take effect immediately (there is no reshaping step, and limited memory of previous drawing operations), so it is limited in the kinds of layouts it supports.
+Functions take effect immediately (there is no reshaping step, and limited memory of previous drawing operations), so it's limited in the kinds of layouts it supports. The library was originally written for debug-printing.
 
 QuickPrint's writing functions are split into "plain" and "formatted" categories. The plain functions are lazy, in the sense that they convert all values to be printed to strings. As a result, LÖVE `coloredtext` sequences won't work. (Making it work is doable, but raises more design issues.) On the other hand, the formatted writing functions do not apply any type conversion, and are programmed to handle `coloredtext`.
 
@@ -71,7 +74,7 @@ Gets the LÖVE graphics state font, or the font associated with a LÖVE Text obj
 
 ### qp:setTextObject
 
-Assigns a LÖVE Text object to `qp`, or removes any existing object. All print commands will be directed to the Text object instead of the framebuffer/canvas. The `qp` table's state should be reset after calling, and you should call `Text:clear()` to ensure you are working with a clean slate.
+Assigns a LÖVE Text object to `qp`, or removes any existing object. All print commands will be directed to the Text object instead of the framebuffer/canvas. The `qp` table should be reset after calling, and you should call `Text:clear()` to ensure you are working with a clean slate.
 
 `qp:setTextObject(text_object)`
 
@@ -349,8 +352,11 @@ A version of `qp:write()` that takes one sequence (array table).
 Versions of `qp:write()` which take exactly 1 to 4 arguments. Additional arguments are ignored.
 
 `qp:write1(s1)`
+
 `qp:write2(s1, s2)`
+
 `qp:write3(s1, s2, s3)`
+
 `qp:write4(s1, s2, s3, s4)`
 
 * `s1`: The first value to write.
@@ -382,8 +388,11 @@ Version of `qp:print()` that takes one sequence (array table).
 Versions of `qp:print()` which take exactly 1 to 4 arguments. Additional arguments are ignored.
 
 `qp:print(s1)`
+
 `qp:print(s1, s2)`
+
 `qp:print(s1, s2, s3)`
+
 `qp:print(s1, s2, s3, s4)`
 
 
@@ -437,17 +446,17 @@ Prints one string or `coloredtext` sequence using formatting features provided b
 
 * Switching fonts between write operations on the same line may lead to inconsistent offsetting and kerning. Text objects do not support multiple simultaneous fonts, so you shouldn't change a Text object's font as you write to it.
 
-* QuickPrint is not optimized, and cannot be optimized very much given its design. (It's quick as in *quick and dirty*.) If you have a lot of text that rarely changes, you can save some CPU cycles by printing it to a LÖVE Text object and drawing that, only clearing and rewriting the Text when there's a change. This comes with its own trade-offs: for example, `Text:getDimensions()` will only return the size of one bit of text added to the object. Rendering to a canvas is another option.
+* QuickPrint is not optimized, and cannot be optimized very much given its design. (It's quick as in *quick and dirty*.) If you have a lot of text that rarely changes, you can save some CPU cycles by printing it to a LÖVE Text object and drawing that, only clearing and rewriting the Text when there's a change. Rendering to a canvas is another option.
 
 
 ## Known Bugs
 
-### 1
+### One
 * In LÖVE 11.4, adding empty or whitespace-only strings to a Text Object crashes the application.
   * This is fixed in LÖVE 12.
-  * '_love11TextGuard()' is implemented as a workaround. It will be moved when the library is upgraded to LÖVE 12.
-	
-### 2
+  * `_love11TextGuard()` is implemented as a workaround. It will be removed when the library is upgraded to LÖVE 12.
+
+### Two
 * In LÖVE 11.4, small `wraplimit` values given to `Text:addf()` crash the application.
   * This is fixed in LÖVE 12. `Text:setf()` and `love.graphics.printf()` are not affected.
   * Workaround: If using `Text:addf()`, find a minimum working value for your font(s) and never make the reference width smaller than that.

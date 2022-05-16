@@ -23,11 +23,18 @@ main_font:setLineHeight(1.5)
 local qp = quickPrint.new()
 
 --[[
-The behavior of non-left align modes is a bit unintuitive, owing to the fact that this library began existence as a debug-printing tool.
+The behavior of non-left align modes is a bit unintuitive, owing to the fact that this library began existence
+as a debug-printing tool.
 
-The 'plain' printing commands, under normal circumstances, will not move the X cursor backwards to the left. If your first tab stop is at X position 0, then no text will ever center-align or right-align against it (unless you moved the cursor backwards first.) However, if you slide the first tab stop a bit to the right, then there should be some "breathing room" to allow the expected placement.
+The 'plain' printing commands, under normal circumstances, will not move the X cursor backwards to the left. If
+your first tab stop is at X position 0, then no text will ever center-align or right-align against it (unless
+you moved the cursor backwards first.) However, if you slide the first tab stop a bit to the right, then there
+should be some "breathing room" to allow the expected placement.
 
-The 'formatted' print functions are a bit different. They were grafted on after the initial design, when I realized that LÖVE's printf() word-wrap and coloredtext features were too useful to ignore, even if they didn't quite work the same as the rest of the library. Only qp:writefSingle() respects tab stops, and it will position text without caring about what has already been printed on the current line.
+The 'formatted' print functions are a bit different. They were grafted on after the initial design, when I
+realized that LÖVE's printf() word-wrap and coloredtext features were too useful to ignore, even if they didn't
+quite work the same as the rest of the library. Only qp:writefSingle() respects tab stops, and it will position
+text without caring about what has already been printed on the current line.
 
 I hope this answers any questions you had about QuickPrint virtual tab stops, and that you have a fantastic day.
 --]]
@@ -78,7 +85,6 @@ local demo_tabs = {
 
 
 function love.keypressed(kc, sc)
-	-- QuickQuit
 	if sc == "escape" then
 		love.event.quit()
 	elseif sc == "tab" then

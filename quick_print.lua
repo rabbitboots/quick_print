@@ -100,11 +100,11 @@ end
 
 local function plainWrite(self, str, font)
 	local text_width = font:getWidth(str)
+	local align = self.align
 
 	-- Handle tab placement.
 	if self.tabs then
 		local tab_x = self.tabs[self.tab_i]
-		local align = self.align
 
 		if type(tab_x) == "table" then
 			align = tab_x.align or align
@@ -128,7 +128,6 @@ local function plainWrite(self, str, font)
 
 	if #str > 0 then
 		-- Apply plain alignment relative to cursor X
-		local align = self.align
 
 		-- Check kerning, if applicable.
 		-- NOTE: The kerning offset may be incorrect if you switched between incompatible fonts from the last print operation.
@@ -701,8 +700,6 @@ function _mt_qp:writefSingle(text, align)
 	elseif align and not enum_align[align] then errEnumAlign(2, align) end
 	--]]
 
-	align = align or self.align
-
 	--[[
 	NOTE: We need a scaled copy of the base width to get an acceptable wrap-limit for scaled pixel art text.
 	However, the original base width must be used for actual placement.
@@ -724,10 +721,16 @@ function _mt_qp:writefSingle(text, align)
 		tab_x = type(tab_t) == "number" and tab_t or nil
 	end
 
+	--[[
+	Align priority: 1) function argument, 2) tab align, 3) self.align
+	--]]
+
 	if type(tab_t) == "table" then
-		align = align or tab_t.align or "left"
+		align = align or tab_t.align
 		tab_x = tab_t.x
 	end
+
+	align = align or self.align
 
 	local font = self:getFont()
 	local text_width = type(text) == "string" and font:getWidth(text) or getColoredTextWidth(text, font)
@@ -745,12 +748,11 @@ function _mt_qp:writefSingle(text, align)
 	end
 
 	-- Single-line without tabs only: conditional justify alignment.
-	local align_mode = align or self.align
 	if not self.tabs and (text_width / scaled_w) > self.pf_justify_threshold then
-		align_mode = "justify"
+		align = "justify"
 	end
 
-	formattedPrintLogic(self, text, align_mode, font, self.origin_x + self.x, self.origin_y + self.y)
+	formattedPrintLogic(self, text, align, font, self.origin_x + self.x, self.origin_y + self.y)
 	self:advanceTab()
 end
 
@@ -762,6 +764,7 @@ function _mt_qp:printfSingle(text, align)
 	elseif align and not enum_align[align] then errEnumAlign(2, align) end
 	--]]
 
+	-- Tab stops are not taken into account.
 	align = align or self.align
 
 	self:writefSingle(text, align)
@@ -776,6 +779,7 @@ function _mt_qp:printf(text, align)
 	elseif align and not enum_align[align] then errEnumAlign(2, align) end
 	--]]
 
+	-- Tab stops are not taken into account.
 	align = align or self.align
 
 	local scaled_w = math.ceil(self.ref_w / math.max(self.sx, 0.0000001)) -- avoid div/0

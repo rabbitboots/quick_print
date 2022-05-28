@@ -99,7 +99,6 @@ Assigns a table of virtual tab stops, or removes any existing tab sequence. Each
 * `tabs`: A sequence of tab stops, or false/nil to remove any assigned tabs.
 
 
-
 ### qp:getTabs
 
 Gets the currently-assigned table of tabs, or nil if no tabs are assigned.
@@ -131,11 +130,40 @@ Gets the current align mode.
 
 ### qp:advanceX
 
-Moves the X cursor by a number of pixels, or by the width of a string in relation to the current active font. (Cursor X advance is generally only useful with left alignment. The other align modes are intended to be used with virtual tab stops.) Clears kerning memory.
+Moves the X cursor by a number of pixels. (Cursor X advance is generally only useful with left alignment. The other align modes are intended to be used with virtual tab stops.) Clears kerning memory.
 
-`qp:advanceX(content_w)`
+`qp:advanceX(width)`
 
-* `content_w`: Number of pixels to move, or a string whose width will be used (via `Font:getWidth()`.)
+* `width`: Number of pixels to move
+
+
+### qp:advanceXStr
+
+Moves the X cursor by the pixel-width of a string, measured in reference to the current active font. Clears kerning memory.
+
+`qp:advanceXStr(str)`
+
+* `str`: The string whose width will be used (via `Font:getWidth()`.)
+
+
+### qp:setXMin
+
+Moves the X cursor to at least the requested minimum position. Clears kerning memory, even if the X position is unaffected.
+
+`qp:advanceXMin(x_min)`
+
+* `x_min`: The minimum position.
+
+
+### qp:advanceXCoarse
+
+Moves the X cursor right in "coarse" steps, acting somewhat like a tab stop without involving the `qp.tabs` table. Clears kerning memory.
+
+`qp:advanceXMod(coarse_x, margin)`
+
+* `coarse_x`: The "snap-to" width to use when positioning the cursor, in pixels.
+
+* `margin`: (0) Adds pixel padding to the current X position, making it jump to the next coarse position earlier. Use to ensure there is a buffer of empty space between printed text.
 
 
 ### qp:advanceTab
@@ -147,11 +175,29 @@ If tab stops are assigned, moves the X cursor to the current virtual tab stop, i
 
 ### qp:setPosition
 
-Moves the cursor to an arbitrary position, relative to the origin. Resets kerning memory.
+Moves the cursor to an arbitrary position, relative to the origin. Clears kerning memory and invalidates tab stop state.
 
 `qp:setPosition(x, y)`
 
 * `x`: X position, relative to `qp.origin_x`.
+* `y`: Y position, relative to `qp.origin_y`.
+
+
+### qp:setXPosition
+
+Moves the cursor to an arbitrary horizontal position, relative to the origin. Clears kerning memory and invalidates tab stop state.
+
+`qp:setXPosition(x)`
+
+* `x`: X position, relative to `qp.origin_x`.
+
+
+### qp:setYPosition
+
+Moves the cursor to an arbitrary vertical position, relative to the origin. Does not clear kerning memory or tab stop state.
+
+`qp:setYPosition(y)`
+
 * `y`: Y position, relative to `qp.origin_y`.
 
 
@@ -164,13 +210,49 @@ Gets the current cursor position, relative to the origin.
 **Returns:** The cursor X and Y positions (`qp.x` and `qp.y`).
 
 
+### qp:getXPosition
+
+Gets the current cursor X position, relative to the origin.
+
+`local x = qp:getXPosition()`
+
+**Returns:** The cursor X position (`qp.x`).
+
+
+### qp:getYPosition
+
+Gets the current cursor Y position, relative to the origin.
+
+`local y = qp:getYPosition()`
+
+**Returns:** The cursor Y position (`qp.y`).
+
+
 ### qp:movePosition
 
-Moves the cursor, relative to the current position. Resets kerning memory.
+Moves the cursor, relative to the current position. Resets kerning memory and invalidates tab stop state.
 
 `qp:movePosition(dx, dy)`
 
 * `x`: Amount to add to the current X position (`qp.x`).
+* `y`: Amount to add to the current Y position (`qp.y`).
+
+
+### qp:moveXPosition
+
+Moves the cursor horizontally, relative to the current position. Resets kerning memory and invalidates tab stop state.
+
+`qp:moveXPosition(dx)`
+
+* `x`: Amount to add to the current X position (`qp.x`).
+
+
+### qp:moveYPosition
+
+Moves the cursor vertically, relative to the current position. Does not reset kerning memory or tab stop state.
+
+`qp:moveYPosition(dy)`
+
 * `y`: Amount to add to the current Y position (`qp.y`).
 
 

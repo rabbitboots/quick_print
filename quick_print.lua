@@ -1,5 +1,5 @@
 -- QuickPrint: A text drawing library for LÖVE.
--- Version: 1.0.1
+-- Version: 1.0.2
 -- LÖVE supported versions: 11.4
 -- See LICENSE, README.md and the demos for more info.
 
@@ -8,7 +8,7 @@
 	#1: In LÖVE 11.4, adding empty or whitespace-only strings to a Text Object crashes the application.
 	This is fixed in LÖVE 12.
 	'_love11TextGuard()' is implemented as a workaround. [UPGRADE] Remove in LÖVE 12.
-	
+
 	#2: In LÖVE 11.4, small wraplimit values given to Text:addf() crash the application.
 	This is fixed in LÖVE 12. Text:setf() and love.graphics.printf() are not affected.
 	Workaround: If using Text:addf(), find a minimum working value for your font(s) and never
@@ -301,21 +301,58 @@ function _mt_qp:getAlign()
 end
 
 
-function _mt_qp:advanceX(content_w)
+function _mt_qp:advanceX(width)
 	-- Assertions
 	-- [[
-	if type(content_w) ~= "number" and type(content_w) ~= "string" then errType(1, content_w, "number/string") end
+	if type(width) ~= "number" then errType(1, width, "number") end
 	--]]
 
 	-- Cursor X advance is generally only useful with left alignment. The other align modes are intended to
 	-- be used with virtual tab stops.
 
-	if type(content_w) == "string" then
-		local font = self:getFont()
-		content_w = font:getWidth(content_w)
-	end
+	self.x = math.ceil(self.x + width)
 
-	self.x = math.ceil(self.x + content_w)
+	self.last_glyph = false
+end
+
+
+function _mt_qp:advanceXStr(str)
+	-- Assertions
+	-- [[
+	if type(str) ~= "string" then errType(1, str, "string") end
+	--]]
+
+	local font = self:getFont()
+	local width = font:getWidth(str)
+
+	self.x = math.ceil(self.x + width)
+
+	self.last_glyph = false
+end
+
+
+function _mt_qp:setXMin(x_min)
+	-- Assertions
+	-- [[
+	if type(x_min) ~= "number" then errType(1, x_min, "number") end
+	--]]
+
+	self.x = math.max(self.x, x_min)
+
+	self.last_glyph = false
+end
+
+
+function _mt_qp:advanceXCoarse(coarse_x, margin)
+	margin = margin or 0
+
+	-- Assertions
+	-- [[
+	if type(coarse_x) ~= "number" then errType(1, coarse_x, "number")
+	elseif type(margin) ~= "number" then errType(2, margin, "nil/number") end
+	--]]
+
+	self.x = math.max(self.x, math.floor(((self.x + margin + coarse_x) / coarse_x)) * coarse_x)
 
 	self.last_glyph = false
 end
@@ -352,8 +389,44 @@ function _mt_qp:setPosition(x, y)
 end
 
 
+function _mt_qp:setXPosition(x)
+	-- Assertions
+	-- [[
+	if type(x) ~= "number" then errType(1, x, "number") end
+	--]]
+
+	self.x = x
+
+	self.tab_i = math.huge
+	self.last_glyph = false
+end
+
+
+function _mt_qp:setYPosition(y)
+	-- Assertions
+	-- [[
+	if type(y) ~= "number" then errType(1, y, "number") end
+	--]]
+
+	self.y = y
+
+	-- Does not invalidate tab stop state.
+	-- Does not clear kerning memory.
+end
+
+
 function _mt_qp:getPosition()
 	return self.x, self.y
+end
+
+
+function _mt_qp:getXPosition()
+	return self.x
+end
+
+
+function _mt_qp:getYPosition()
+	return self.y
 end
 
 
@@ -369,6 +442,32 @@ function _mt_qp:movePosition(dx, dy)
 
 	self.tab_i = math.huge
 	self.last_glyph = false
+end
+
+
+function _mt_qp:moveXPosition(dx)
+	-- Assertions
+	-- [[
+	if type(dx) ~= "number" then errType(1, dx, "number") end
+	--]]
+
+	self.x = self.x + dx
+
+	self.tab_i = math.huge
+	self.last_glyph = false
+end
+
+
+function _mt_qp:moveYPosition(dy)
+	-- Assertions
+	-- [[
+	if type(dy) ~= "number" then errType(1, dy, "number") end
+	--]]
+
+	self.y = self.y + dy
+
+	-- Does not invalidate tab stop state.
+	-- Does not clear kerning memory.
 end
 
 

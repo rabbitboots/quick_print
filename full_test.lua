@@ -1,7 +1,7 @@
 --[[
 	A full test of all features in QuickPrint.
-	
-	TODO: It's a few things short of being a true full test.
+
+	TODO: This is a few things short of being a true full test.
 	* Missing align overrides, I think (qp align vs tab align vs function align?)
 	* I added some more getters while prepping the Git repository.
 --]]
@@ -140,41 +140,100 @@ local function testVolley(qp)
 	qp:down(3)
 	qp:print("____________")
 	
-	-- (8) qp:advanceX(content_w)
+	-- (8) qp:advanceX(width)
 	qp:setTabs()
 	
 	qp:write("(8) advanceX(48):|")
 	qp:advanceX(48)
 	qp:write("|")
 	qp:down()
-	
-	qp:write("(8) advanceX('This Much'):|")
-	qp:advanceX("'This Much'")
+
+	-- CHANGE: 1.0.2: advanceX() was split into advanceX() and advanceXStr().
+	-- (8.5a) qp:advanceXStr(str)
+	qp:write("(8.5a) advanceXStr('This Much'):|")
+	qp:advanceXStr("'This Much'")
 	qp:write("|")
 	qp:down()
-	
+
+	-- CHANGE: 1.0.2: Added advanceXCoarse(), setXMin()
+	-- (8.5b) qp:advanceXCoarse(coarse_x, margin)
+	qp:print("(8.5b) advanceXCoarse(32, 16):")
+	qp:write("|")
+	qp:advanceXCoarse(32, 8)
+	qp:write("||")
+	qp:advanceXCoarse(32, 8)
+	qp:write("|||")
+	qp:advanceXCoarse(32, 8)
+	qp:write("||||")
+	qp:advanceXCoarse(32, 8)
+	qp:write("|||||")
+	qp:advanceXCoarse(32, 8)
+	qp:write("||||||")
+	qp:advanceXCoarse(32, 8)
+	qp:write("|||||||")
+	qp:advanceXCoarse(32, 8)
+	qp:write("||||||||")
+	qp:advanceXCoarse(32, 8)
+
+	qp:down()
+
+	-- (8.5c) qp:setXMin(x_min)
+	qp:print("(8.5c) setXMin(128) (before, after):")
+	qp:write("before")
+	qp:setXMin(128)
+	qp:write("after")
+	qp:setXMin(128)
+	qp:write("  < can't go back")
+
+	qp:down()
+
 	qp:setTabs(tabs)
 	qp:down()
-	
+
 	-- (9) qp:advanceTab()
 	qp:write("(9) advanceTab")
 	qp:advanceTab()
 	qp:write("(View with tabs visible)")
 	qp:down()
-	
-	
+
+
 	-- (10) qp:getPosition()
 	local pos_x, pos_y = qp:getPosition()
 	qp:print("(10) getPosition: " .. pos_x .. ", " .. pos_y)
-	
+
 	-- (11) qp:setPosition()
 	pos_x, pos_y = qp:getPosition()
 	qp:setPosition(pos_x + 4, pos_y + 4)
 	qp:print("(11) setPosition")
-	
+
 	qp:setPosition(pos_x, pos_y)
 	qp:down(2)
+
+	-- CHANGE: 1.0.2: setPosition(), getPosition() and movePosition() have single-axis variants.
+	-- (11.5a) setXPosition(x)
+	qp:setXPosition(64)
+	qp:write("(11.5a) setXPosition(64)")
+	qp:moveXPosition(32)
+	-- (11.5b) moveXPosition(dx)
+	qp:write("(11.5b) moveXPosition(32)")
+
+	qp:down()
 	
+	-- (11.5c) setYPosition(y)
+	qp:setYPosition(qp:getYPosition() + 8)
+	qp:write("(11.5c) qp:setYPosition(plus 8)")
+
+	-- (11.5d) moveYPosition(dy)
+	qp:moveYPosition(8)
+	qp:write("(11.5d) moveYPosition(8)")
+
+	qp:down()
+
+	-- (11.5e) qp:getXPosition()
+	qp:print("(11.5e) getXPosition: ", qp:getXPosition())
+	
+	qp:down()
+
 	-- (12) qp:movePosition()
 	local n_moves = 18
 	pos_x, pos_y = qp:getPosition()

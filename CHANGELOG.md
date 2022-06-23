@@ -1,5 +1,10 @@
 # QuickPrint Changelog
 
+## v1.0.3: 2022-06-22
+* Added single-axis versions of:
+  * `setOrigin()`: `setXOrigin()` and `setYOrigin()`
+  * `getOrigin()`: `getXOrigin()` and `getYOrigin()`
+
 
 ## v1.0.2: 2022-05-28
 

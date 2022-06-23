@@ -1,5 +1,5 @@
 -- QuickPrint: A text drawing library for LÖVE.
--- Version: 1.0.2
+-- Version: 1.0.3
 -- LÖVE supported versions: 11.4
 -- See LICENSE, README.md and the demos for more info.
 
@@ -489,8 +489,51 @@ function _mt_qp:setOrigin(origin_x, origin_y)
 end
 
 
+function _mt_qp:setXOrigin(origin_x)
+	-- Assertions
+	-- [[
+	if type(origin_x) ~= "number" then errType(1, origin_x, "number") end
+	--]]
+
+	self.origin_x = origin_x
+
+	self.x = 0
+	self.y = 0
+
+	self.tab_i = 1
+	self.last_glyph = false
+end
+
+
+function _mt_qp:setYOrigin(origin_y)
+	-- Assertions
+	-- [[
+	if type(origin_y) ~= "number" then errType(1, origin_y, "number") end
+	--]]
+
+	self.origin_y = origin_y
+
+	self.x = 0
+	self.y = 0
+
+	self.tab_i = 1
+	self.last_glyph = false
+end
+
+
+
 function _mt_qp:getOrigin()
 	return self.origin_x, self.origin_y
+end
+
+
+function _mt_qp:getXOrigin()
+	return self.origin_x
+end
+
+
+function _mt_qp:getYOrigin()
+	return self.origin_y
 end
 
 

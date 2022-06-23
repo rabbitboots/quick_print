@@ -266,6 +266,24 @@ Repositions the `qp` origin (top-left printing area). Resets cursor position to 
 * `origin_y`: New Y origin.
 
 
+### qp:setXOrigin
+
+Repositions the `qp` X origin (left printing area). Resets cursor position to (0, 0). Resets kerning memory.
+
+`qp:setXOrigin(origin_x)`
+
+* `origin_x`: New X origin.
+
+
+### qp:setYOrigin
+
+Repositions the `qp` Y origin (top printing area). Resets cursor position to (0, 0). Resets kerning memory.
+
+`qp:setYOrigin(origin_y)`
+
+* `origin_y`: New Y origin.
+
+
 ### qp:getOrigin
 
 Gets the current `qp` origin.
@@ -273,6 +291,24 @@ Gets the current `qp` origin.
 `local orig_x, orig_y = qp:getOrigin()`
 
 **Returns:** The `qp` origin X and Y (`qp.origin_x` and `qp.origin_y`).
+
+
+### qp:getXOrigin
+
+Gets the current `qp` X axis origin.
+
+`local orig_x = qp:getXOrigin()`
+
+**Returns:** The `qp` X origin (`qp.origin_x`).
+
+
+### qp:getYOrigin
+
+Gets the current `qp` Y axis origin
+
+`local orig_y = qp:getYOrigin()`
+
+**Returns:** The `qp` Y origin (`qp.origin_y`).
 
 
 ### qp:moveOrigin

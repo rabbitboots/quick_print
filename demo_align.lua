@@ -16,7 +16,7 @@ local demo_elapsed = 0.0
 local demo_zoom = 1.0
 
 -- Fonts
-local orig_font = love.graphics.newFont()
+local orig_font = love.graphics.newFont(16)
 local main_font = love.graphics.newFont(16)
 main_font:setLineHeight(1.5)
 
@@ -154,13 +154,14 @@ function love.draw()
 			qp:print3(tome[i][1], tome[i][2], tome[i][3])
 		end
 	end
-	
+
+	love.graphics.origin()
+
 	love.graphics.setColor(0, 0, 0, 0.75)
-	love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), 64)
+	love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), 48)
 	love.graphics.setColor(1, 1, 1, 1)
 	
-	love.graphics.origin()
 	love.graphics.setFont(orig_font)
-	love.graphics.print("(TAB: show lines\tARROWS: scroll\t(+-)Zoom\tESCAPE: quit)", 0, 0)
+	love.graphics.printf("(TAB: show lines\tARROWS: scroll\t(+-)Zoom\tESCAPE: quit)", 0, math.floor(48/2 - orig_font:getHeight()/2), love.graphics.getWidth(), "center")
 end
 

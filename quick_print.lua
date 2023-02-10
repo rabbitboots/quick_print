@@ -1,5 +1,5 @@
 -- QuickPrint: A text drawing library for LÖVE.
--- Version: 1.0.3
+-- Version: 1.0.4
 -- LÖVE supported versions: 11.4
 -- See LICENSE, README.md and the demos for more info.
 
@@ -203,8 +203,8 @@ function quickPrint.new(ref_w, ref_h)
 	self.origin_y = 0
 	self.ref_w = ref_w or math.huge
 	self.ref_h = ref_h or math.huge
-	-- ref_h does nothing, but is provided in the event that it helps with assigning scissor boxes
-	-- or placement against a bottom boundary in general.
+	-- ref_h does nothing, but is provided in case it helps with assigning scissor boxes
+	-- or placement against a bottom boundary.
 
 	self.x = 0
 	self.y = 0
@@ -221,8 +221,8 @@ function quickPrint.new(ref_w, ref_h)
 	self.pad_v = 0
 
 	-- Alignment setting for plain print() and write() calls. For plain text, this is relative to the
-	-- current cursor X position. For formatted text, it is relative to the reference width (origin_x),
-	-- and the current tab stop if tabs are enabled.
+	-- current cursor X position. For formatted text, it is relative to the reference width and the
+	-- current tab stop if tabs are enabled.
 	-- Some functions can override it. "justify" applies to formatted-print calls only, and will be
 	-- treated as "left" for plain writes.
 	self.align = "left" -- "left", "center", "right", "justify"
@@ -232,15 +232,12 @@ function quickPrint.new(ref_w, ref_h)
 	-- Each entry in self.tabs can be either a number or a table containing {x = <number>, align = <string|nil>},
 	-- where 'x' is the horizontal tab position, and 'align' is "left", "center", "right" or nil, overriding
 	-- the current plain-align mode if present.
-	-- Applies to plain text drawn with qp:print*() and qp:write*() only.
+	-- Applies to qp:print*(), qp:write*(), and qp:writefSingle().
 	self.tab_i = 1
 	self.tabs = false
 
 	-- Assign a LÖVE Text object to append strings to it instead of writing to the framebuffer or active canvas.
 	self.text_object = false
-
-	-- For single-line formatted print: if (text width / ref_w) < this value, force justified alignment.
-	self.pf_justify_threshold = 1.0
 
 	setmetatable(self, _mt_qp)
 
@@ -371,6 +368,23 @@ function _mt_qp:advanceTab()
 
 		self.tab_i = self.tab_i + 1
 	end
+end
+
+
+function _mt_qp:setTabIndex(i)
+	-- Assertions
+	-- [[
+	if type(i) ~= "number" then errType(1, i, "number") end
+	--]]
+
+	-- Does not check if a tabs table is currently populated, or that the index has an entry.
+	self.tab_i = i
+end
+
+
+function _mt_qp:getTabIndex()
+	local i = self.tab_i
+	return (i == math.huge and false or i)
 end
 
 
@@ -889,11 +903,6 @@ function _mt_qp:writefSingle(text, align)
 		end
 	end
 
-	-- Single-line without tabs only: conditional justify alignment.
-	if not self.tabs and (text_width / scaled_w) > self.pf_justify_threshold then
-		align = "justify"
-	end
-
 	formattedPrintLogic(self, text, align, font, self.origin_x + self.x, self.origin_y + self.y)
 	self:advanceTab()
 end
@@ -932,7 +941,7 @@ function _mt_qp:printf(text, align)
 	-- more bits of text to the Text object.)
 
 	-- If this is the last thing you care about printing and you don't need to keep track of the Y cursor after
-	-- this point, you can qp:printfSingle() instead (though mind the 'pf_justify_threshold' field.)
+	-- this point, you can qp:printfSingle() instead.
 
 	self.last_glyph = false
 	self.x = 0

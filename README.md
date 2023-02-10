@@ -1,9 +1,11 @@
-# quick_print.lua
+# quick\_print.lua
 
 QuickPrint is a text drawing library for the [LÖVE](https://love2d.org/) Framework.
 
+Version: **v1.0.4** (See CHANGELOG.md for potential breaking changes from v1.0.3.)
 
-![quickprint_gh_1](https://user-images.githubusercontent.com/23288188/168460007-1d08b8ba-3893-4e07-a01b-21a2f3332a8e.png)
+
+![quickprint\_gh\_1](https://user-images.githubusercontent.com/23288188/168460007-1d08b8ba-3893-4e07-a01b-21a2f3332a8e.png)
 
 
 ## Features
@@ -44,7 +46,7 @@ QuickPrint updates an internal cursor position with every draw. When virtual tab
 
 Functions take effect immediately (there is no reshaping step, and limited memory of previous drawing operations), so it's limited in the kinds of layouts it supports. The library was originally written for debug-printing.
 
-QuickPrint's writing functions are split into "plain" and "formatted" categories. The plain functions are lazy, in the sense that they convert all values to be printed to strings. As a result, LÖVE `coloredtext` sequences won't work. (Making it work is doable, but raises more design issues.) On the other hand, the formatted writing functions do not apply any type conversion, and are programmed to handle `coloredtext`.
+QuickPrint's writing functions are split into "plain" and "formatted" categories. The plain functions convert all values to be printed to strings. As a result, LÖVE `coloredtext` sequences won't work. The formatted writing functions do not apply any type conversion, and are programmed to handle `coloredtext`.
 
 
 ## Public Functions
@@ -52,7 +54,7 @@ QuickPrint's writing functions are split into "plain" and "formatted" categories
 
 ### quickPrint.new
 
-Creates and returns a new quick_print state table.
+Creates and returns a new quick\_print state table.
 
 `quickPrint.new(ref_w, ref_h)`
 * `ref_w`: (math.huge) Reference width for the cursor. Affects formatted print calls with non-left alignment.
@@ -106,6 +108,24 @@ Gets the currently-assigned table of tabs, or nil if no tabs are assigned.
 `local tabs_t = qp:getTabs()`
 
 **Returns:** Table of tabs if present, or nil if nothing is assigned.
+
+
+### qp:setTabIndex
+
+Sets the current tab index. Does not check if the index is valid or that the qp state has a tabs table assigned. Note that the cursor will not automatically go backwards to a tab that is behind.
+
+`qp:setTabIndex(i)`
+
+* `i`: The tab index to jump to.
+
+
+### qp:getTabIndex
+
+Gets the current tab index, or false if tab state is invalid.
+
+`local tab_i = qp:getTabIndex()`
+
+**Returns:** The current tab index, or false if tab state is invalid.
 
 
 ### qp:setAlign
@@ -522,12 +542,12 @@ Versions of `qp:print()` which take exactly 1 to 4 arguments. Additional argumen
 
 ## Formatted Writing Functions
 
-These do not convert values to strings, and are programmed to support `coloredtext` sequences. Unlike the plain functions, these take only one string or `coloredtext` sequence per call.
+These do not convert values to strings, and are programmed to support `coloredtext` sequences. Unlike the plain functions, they take only one string or `coloredtext` sequence per call.
 
 
 ### qp:writefSingle
 
-Prints one string or `coloredtext` sequence using formatting features provided by `love.graphics.printf()`. This function assumes that the text will not exceed one line (or that the caller is not concerned if it happens to wrap.)  If you use align modes other than `"left"`, you must set a sensible reference width (`qp.ref_w`), or else the text will render infinitely to the right. This function is also affected by virtual tab stop state, and it does not advance the X cursor. Finally, it checks `qp.pf_justify_threshold` to auto-set the `"justify"` align mode if the text width is close enough to the reference width.
+Prints one string or `coloredtext` sequence using formatting features provided by `love.graphics.printf()`. This function assumes that the text will not exceed one line (or that the caller is not concerned if it happens to wrap). If you use align modes other than `"left"`, you must set a reference width (`qp.ref_w`), or else the text will render infinitely to the right. This function is also affected by virtual tab stop state. It does not advance the X cursor.
 
 `qp:writefSingle(text, align)`
 
@@ -547,17 +567,12 @@ Like `qp:writefSingle()`, but automatically moves the cursor down one line after
 
 ### qp:printf
 
-Prints one string or `coloredtext` sequence using formatting features provided by `love.graphics.printf()`, and then moves the cursor down to the next free line. Unlike `qp:writefSingle()` and `qp:printfSingle()`, this does not take the virtual tab state or `qp.pf_justify_threshold` field into account. It will also generate some throwaway tables and strings in order to calculate the new Y cursor position.
+Prints one string or `coloredtext` sequence using formatting features provided by `love.graphics.printf()`, and then moves the cursor down to the next free line. Unlike `qp:writefSingle()` and `qp:printfSingle()`, this does not take the virtual tab state into account. It will also generate some throwaway tables and strings in order to calculate the new Y cursor position.
 
 `qp:printf(text, align)`
 
 * `text`: The string or `coloredtext` sequence to print.
 * `align`: (`qp.pf_align`) LÖVE AlignMode enum: `"left"`, `"center"`, `"right"` or `"justify"`.
-
-
-### Other State Fields
-
-`qp.pf_justify_threshold`: For single-line formatted write/print: if the calculated text width divided by the reference width is greater than this value, then justified alignment is forced. A value of 1.0 or greater should disable the feature. Does not affect multi-line `printf()`.
 
 
 ## Tips, Limitations

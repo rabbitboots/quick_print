@@ -7,6 +7,19 @@
 --]]
 
 
+-- [UPGRADE] LÖVE 12 Development (f17d3d9) renames `Text` to `TextBatch`.
+local _lg_newTextBatch
+do
+	local love_major, love_minor, love_revision, love_codename = love.getVersion()
+
+	if love_major == 12 then
+		_lg_newTextBatch = love.graphics.newTextBatch
+	else
+		_lg_newTextBatch = love.graphics.newText
+	end
+end
+
+
 require("demo_libs.test.strict")
 local fontSet = require("demo_libs.font_set.font_set")
 local quickPrint = require("quick_print")
@@ -65,7 +78,7 @@ end
 
 
 -- This LÖVE Text object is set up in love.load() and just rendered in love.draw()
-local txt = love.graphics.newText(_default_font)
+local txt = _lg_newTextBatch(_default_font)
 do
 	local qp2 = quickPrint.new(256)
 	qp2:setTextObject(txt)

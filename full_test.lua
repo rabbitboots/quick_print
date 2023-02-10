@@ -440,7 +440,7 @@ local function testVolley(qp)
 	qp:down()
 
 	-- (16.1) Align override: tab
-	-- "bar" has right alignment against the fifth tab, even though qt.align is "left"
+	-- "bar" has right alignment against the fifth tab, even though qp.align is "left"
 	local old_tab5 = tabs[5]
 	tabs[5] = tabs_align_test
 	tabs_align_test.x = old_tab5
@@ -449,7 +449,7 @@ local function testVolley(qp)
 	qp:print("(16.1) Align override: tab", "foo", "foo", "foo", "bar")
 
 	-- (16.2) Align override: qp:writefSingle()
-	-- "bar" has center alignment against the fifth tab, even though qt.align is "left" and
+	-- "bar" has center alignment against the fifth tab, even though qp.align is "left" and
 	-- the fifth tab contains 'align = "right"'
 	qp:writefSingle("(16.2) Align override: qp:writefSingle()")
 	qp:down()

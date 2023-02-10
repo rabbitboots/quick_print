@@ -21,10 +21,10 @@ local text_w = 160
 local qp = quickPrint.new(text_w, 600)
 
 function love.draw()
-    qp:reset()
+	qp:reset()
 	local width, lines = font:getWrap("In the dark hotel room, CRT static danced on his sullen face.", text_w)
 
-    qp:setAlign("justify")
+	qp:setAlign("justify")
 	for i = 1, #lines - 1 do
 		qp:printfSingle(lines[i])
 	end

@@ -167,7 +167,7 @@ Sets the vertical align mode. Text is placed relative to the cursor Y and the cu
 * `v_align`: The vertical align mode. Can be `top`, `middle`, `true-middle`, `baseline`, or `bottom`.
 
 
-### qp:getAlign
+### qp:getVAlign
 
 Gets the vertical align mode.
 

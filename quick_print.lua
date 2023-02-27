@@ -1,5 +1,5 @@
 -- QuickPrint: A text drawing library for LÖVE.
--- Version: 1.0.4
+-- Version: 1.0.5
 -- LÖVE supported versions: 11.4
 -- See LICENSE, README.md and the demos for more info.
 
@@ -36,16 +36,23 @@ _mt_qp._text_addf = nil
 
 -- * Internal *
 
+
+local enum_align = {["left"] = true, ["center"] = true, ["right"] = true, ["justify"] = true}
+local enum_v_align = {["top"] = true, ["middle"] = true, ["true-middle"] = true, ["baseline"] = true, ["bottom"] = true}
+
+
 local function errType(arg_n, val, expected)
 	error("argument #" .. arg_n .. " bad type (expected " .. expected .. ", got: " .. type(val) .. ")", 3)
 end
 
 
-local enum_align = {["left"] = true, ["center"] = true, ["right"] = true, ["justify"] = true}
-
-
 local function errEnumAlign(arg_n, val)
-	error("argument #" .. arg_n .. ": invalid align enum: " .. type(val), 3)
+	error("argument #" .. arg_n .. ": invalid horizontal align enum: " .. tostring(val), 3)
+end
+
+
+local function errEnumVAlign(arg_n, val)
+	error("argument #" .. arg_n .. ": invalid vertical align enum: " .. tostring(val), 3)
 end
 
 
@@ -98,6 +105,27 @@ local function getColoredTextWidth(coloredtext, font)
 end
 
 
+local function getVAlignOffset(font, v_align)
+	if v_align == "top" then
+		return 0
+
+	elseif v_align == "true-middle" then
+		return -math.floor(font:getHeight() / 2 + 0.5)
+
+	elseif v_align == "middle" then
+		return -math.floor(font:getBaseline() - (font:getBaseline() - font:getAscent()) / 2 + 0.5)
+
+	elseif v_align == "baseline" then
+		return -math.floor(font:getBaseline() + 0.5)
+
+	elseif v_align == "bottom" then
+		return -font:getHeight()
+	end
+
+	return 0
+end
+
+
 local function plainWrite(self, str, font)
 	local text_width = font:getWidth(str)
 	local align = self.align
@@ -139,6 +167,8 @@ local function plainWrite(self, str, font)
 		local px = self.origin_x + self.x
 		local py = self.origin_y + self.y
 
+		py = py + getVAlignOffset(self:getFont(), self.v_align)
+
 		-- NOTE: plainWrite() on its own does not move the cursor down to the next line, even if the string contains '\n'.
 		if self.text_object then
 			--if _love11TextGuard(text) then
@@ -168,6 +198,7 @@ end
 
 local function formattedPrintLogic(self, text, align, font, px, py)
 	local scaled_w = math.ceil(self.ref_w / math.max(self.sx, 0.0000001)) -- avoid div/0
+	py = py + getVAlignOffset(font, self.v_align)
 
 	if self.text_object then
 		if _love11TextGuard(text) then
@@ -226,6 +257,10 @@ function quickPrint.new(ref_w, ref_h)
 	-- Some functions can override it. "justify" applies to formatted-print calls only, and will be
 	-- treated as "left" for plain writes.
 	self.align = "left" -- "left", "center", "right", "justify"
+
+	-- Vertical alignment of text, relative to the cursor. "top" is recommended, but the others might
+	-- be helpful if you are mixing fonts. "middle" and "baseline" should not be used with LÖVE ImageFonts.
+	self.v_align = "top" -- "top", "middle", "true-middle", "baseline", "bottom"
 
 	-- Sequence of "tab stops" with a per-pixel granularity, or false to disable tabs.
 	-- Tab stop positions are absolute, not cumulative. They should be ordered smallest to largest.
@@ -295,6 +330,21 @@ end
 
 function _mt_qp:getAlign()
 	return self.align
+end
+
+
+function _mt_qp:setVAlign(v_align)
+	-- Assertions
+	-- [[
+	if not enum_v_align[v_align] then errEnumVAlign(1, v_align) end
+	--]]
+
+	self.v_align = v_align
+end
+
+
+function _mt_qp:getVAlign()
+	return self.v_align
 end
 
 
@@ -664,6 +714,7 @@ function _mt_qp:reset()
 	self.tab_i = 1
 	self.last_glyph = false
 	self.align = "left"
+	self.v_align = "top"
 end
 
 
@@ -941,7 +992,7 @@ function _mt_qp:printf(text, align)
 	-- more bits of text to the Text object.)
 
 	-- If this is the last thing you care about printing and you don't need to keep track of the Y cursor after
-	-- this point, you can qp:printfSingle() instead.
+	-- this point, you can use qp:printfSingle() instead.
 
 	self.last_glyph = false
 	self.x = 0

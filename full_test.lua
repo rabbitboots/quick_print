@@ -55,7 +55,23 @@ local prefab_string_seq = {
 local tabs = {}
 local tabs_align_test = {x=0, align="right"}
 
-local txt = love.graphics.newText(font1)
+local love_major = love.getVersion()
+local txt
+if love_major == 12 then
+	txt = love.graphics.newTextBatch(font1)
+
+else
+	txt = love.graphics.newText(font1)
+end
+
+
+local function drawCursorXLine(qp)
+	local rr, gg, bb, aa = love.graphics.getColor()
+
+	love.graphics.setColor(1, 0, 0, 1)
+	love.graphics.line(0.5, qp.y + qp.origin_y, love.graphics.getWidth() - 1 + 0.5, qp.y + qp.origin_y)
+	love.graphics.setColor(rr, gg, bb, aa)
+end
 
 
 function love.keypressed(kc, sc)
@@ -458,6 +474,28 @@ local function testVolley(qp)
 	qp:down()
 
 	tabs[5] = old_tab5
+
+	-- (17.x) Test all vertical align modes.
+	qp:down(3)
+	qp:print("(17.1) Vertical align: top, middle, true-middle, baseline, bottom")
+	qp:down(3) -- make space
+	drawCursorXLine(qp)
+	qp:setVAlign("top"); qp:write("M");
+	qp:setVAlign("middle"); qp:write("M")
+	qp:setVAlign("true-middle"); qp:write("M")
+	qp:setVAlign("baseline"); qp:write("M")
+	qp:setVAlign("bottom"); qp:write("M")
+
+	qp:down(2)
+	qp:setVAlign("top")
+	qp:print("(17.2) Same, but with formatted print.")
+	drawCursorXLine(qp); qp:setVAlign("top"); qp:printf("M_____"); qp:down(2);
+	drawCursorXLine(qp); qp:setVAlign("middle"); qp:printf("_M___"); qp:down(2);
+	drawCursorXLine(qp); qp:setVAlign("true-middle"); qp:printf("__M__"); qp:down(2);
+	drawCursorXLine(qp); qp:setVAlign("baseline"); qp:printf("___M_"); qp:down(2);
+	drawCursorXLine(qp); qp:setVAlign("bottom"); qp:printf("____M"); qp:down(2);
+	qp:down()
+	qp:setVAlign("top")
 end
 
 

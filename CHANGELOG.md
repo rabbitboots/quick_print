@@ -1,5 +1,17 @@
 # QuickPrint Changelog
 
+
+## v1.0.5: 2023-02-27
+* Added `qp.v_align` (`top` (default), `middle`, `true-middle`, `baseline`, `bottom`) and associated methods:
+  * `qp:setVAlign(v_align)`
+  * `local v_align = qp:getVAlign()`
+
+Note that `middle` and `baseline` modes should not be used with LÖVE ImageFonts, as they rely on vertical font metrics that are not valid for this type of font.
+
+* Minor fix to enum_align error message.
+* Added `demo_v_align.lua`, and Vertical Alignment tests to `full_test.lua`.
+
+
 ## v1.0.4: 2023-02-10
 * Added `qp:setTabIndex(i)` and `qp:getTabIndex()`.
 * Removed `qp.pf_justify_threshold (0-1)`.

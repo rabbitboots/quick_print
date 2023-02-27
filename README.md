@@ -2,7 +2,7 @@
 
 QuickPrint is a text drawing library for the [LÖVE](https://love2d.org/) Framework.
 
-Version: **v1.0.4** (See CHANGELOG.md for potential breaking changes from v1.0.3.)
+Version: **v1.0.5** (See CHANGELOG.md for potential breaking changes from v1.0.4.)
 
 
 ![quickprint\_gh\_1](https://user-images.githubusercontent.com/23288188/168460007-1d08b8ba-3893-4e07-a01b-21a2f3332a8e.png)
@@ -121,7 +121,7 @@ Sets the current tab index. Does not check if the index is valid or that the qp 
 
 ### qp:getTabIndex
 
-Gets the current tab index, or false if tab state is invalid.
+Gets the tab index, or false if tab state is invalid.
 
 `local tab_i = qp:getTabIndex()`
 
@@ -130,7 +130,7 @@ Gets the current tab index, or false if tab state is invalid.
 
 ### qp:setAlign
 
-Sets the align mode. Alignment behavior varies between plain and formatted print functions. `justify` mode behaves like `left` in plain functions. Some printing functions have arguments which override this setting.
+Sets the horizontal align mode. Alignment behavior varies between plain and formatted print functions. `justify` mode behaves like `left` in plain functions. Some printing functions have arguments which override this setting.
 
 `qp:setAlign(align)`
 
@@ -141,11 +141,39 @@ Sets the align mode. Alignment behavior varies between plain and formatted print
 
 ### qp:getAlign
 
-Gets the current align mode.
+Gets the horizontal align mode.
 
 `local align = qp:getAlign()`
 
 **Returns:** The align LÖVE enum.
+
+
+### qp:setVAlign
+
+Sets the vertical align mode. Text is placed relative to the cursor Y and the current font's vertical metrics.
+
+`top`: (default) Cursor is at the top of the text.
+
+`middle`: Cursor is at the midpoint between the ascent and baseline metrics.
+
+`true-middle`: Cursor is at half the font height.
+
+`bottom`: Cursor is at the bottom of the text.
+
+**WARNING**: Do not use `baseline` or `middle` with LÖVE ImageFonts. They rely on vertical metrics which aren't valid for this type of font. The text will appear at the wrong vertical position.
+
+`qp:setVAlign(v_align)`
+
+* `v_align`: The vertical align mode. Can be `top`, `middle`, `true-middle`, `baseline`, or `bottom`.
+
+
+### qp:getAlign
+
+Gets the vertical align mode.
+
+`local v_align = qp:getVAlign()`
+
+**Returns:** The vertical align mode.
 
 
 ### qp:advanceX
@@ -441,7 +469,7 @@ Gets the current vertical padding value.
 
 ### qp:reset
 
-Moves cursor to (0, 0), resets the alignment mode to `"left"`, and resets the tab stop index to 1. It does not clear the `qp.tabs` table, nor does it remove bound Text objects. Clears kerning memory.
+Moves cursor to (0, 0), resets the alignment mode to `left` + `top`, and resets the tab stop index to 1. It does not clear the `qp.tabs` table, nor does it remove bound Text objects. Clears kerning memory.
 
 `qp:reset()`
 
@@ -547,7 +575,7 @@ These do not convert values to strings, and are programmed to support `coloredte
 
 ### qp:writefSingle
 
-Prints one string or `coloredtext` sequence using formatting features provided by `love.graphics.printf()`. This function assumes that the text will not exceed one line (or that the caller is not concerned if it happens to wrap). If you use align modes other than `"left"`, you must set a reference width (`qp.ref_w`), or else the text will render infinitely to the right. This function is also affected by virtual tab stop state. It does not advance the X cursor.
+Prints one string or `coloredtext` sequence using formatting features provided by `love.graphics.printf()`. This function assumes that the text will not exceed one line (or that the caller is not concerned if it happens to wrap). If you use horizontal align modes other than `"left"`, you must set a reference width (`qp.ref_w`), or else the text will render infinitely to the right. This function is also affected by virtual tab stop state. It does not advance the X cursor.
 
 `qp:writefSingle(text, align)`
 

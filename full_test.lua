@@ -35,10 +35,13 @@ local scroll_y = 125
 local show_tab_lines = false
 
 local font1 = love.graphics.newFont(12)
+local font1_dupe = love.graphics.newFont(12)
 local font2 = love.graphics.newFont(16)
 local font3 = love.graphics.newFont(72)
+local font3_dupe = love.graphics.newFont(72)
 
 local qp = quickPrint.new()
+
 
 local C_WHITE = {1, 1, 1, 1}
 local C_RED = {1, 0, 0, 1}
@@ -90,7 +93,7 @@ function love.keypressed(kc, sc)
 
 	elseif sc == "pagedown" then
 		scroll_y = scroll_y - 16*8
-	
+
 	elseif sc == "tab" then
 		show_tab_lines = not show_tab_lines
 	end
@@ -476,6 +479,7 @@ local function testVolley(qp)
 	tabs[5] = old_tab5
 
 	-- (17.x) Test all vertical align modes.
+	-- This also tests 1.0.6 aux_db font metric stand-ins.
 	qp:down(3)
 	qp:print("(17.1) Vertical align: top, middle, true-middle, baseline, bottom")
 	qp:down(3) -- make space
@@ -488,7 +492,20 @@ local function testVolley(qp)
 
 	qp:down(2)
 	qp:setVAlign("top")
-	qp:print("(17.2) Same, but with formatted print.")
+	qp:print("(17.2) Now with 2x2y scaling.")
+	qp:down(3) -- make space
+	qp:setScale(2, 2)
+	drawCursorXLine(qp)
+	qp:setVAlign("top"); qp:write("M");
+	qp:setVAlign("middle"); qp:write("M")
+	qp:setVAlign("true-middle"); qp:write("M")
+	qp:setVAlign("baseline"); qp:write("M")
+	qp:setVAlign("bottom"); qp:write("M")
+	qp:setScale(1, 1)
+
+	qp:down(2)
+	qp:setVAlign("top")
+	qp:print("(17.3) Same, but with formatted print.")
 	drawCursorXLine(qp); qp:setVAlign("top"); qp:printf("M_____"); qp:down(2);
 	drawCursorXLine(qp); qp:setVAlign("middle"); qp:printf("_M___"); qp:down(2);
 	drawCursorXLine(qp); qp:setVAlign("true-middle"); qp:printf("__M__"); qp:down(2);
@@ -496,6 +513,8 @@ local function testVolley(qp)
 	drawCursorXLine(qp); qp:setVAlign("bottom"); qp:printf("____M"); qp:down(2);
 	qp:down()
 	qp:setVAlign("top")
+
+	love.graphics.setFont(font1)
 end
 
 
@@ -544,10 +563,10 @@ function love.draw()
 	qp:print("~~~")
 	love.graphics.setFont(font1)
 
-	-- (101) qp:clearKerningMemory()
+	-- (101.1) qp:clearKerningMemory()
 	qp:setTabs()
 
-	qp:print("(101) qp:clearKerningMemory()")
+	qp:print("(101.1) qp:clearKerningMemory()")
 	love.graphics.setFont(font3)
 	qp:print("LT")
 
@@ -555,10 +574,58 @@ function love.draw()
 	qp:clearKerningMemory()
 	qp:write("T")
 	qp:down()
+	love.graphics.setFont(font1)
+
+	-- (101.2) Clear kerning on font change
+	qp:print("(101.2) Clear kerning on font change")
+	love.graphics.setFont(font3)
+	qp:write("L")
+	love.graphics.setFont(font3_dupe)
+	qp:write("T")
+	qp:down()
+	love.graphics.setFont(font3)
 
 	love.graphics.setFont(font1)
 
 	qp:setTabs(tabs)
+
+	-- (102.x) Test aux_db parameters
+	qp:print("(102.1) Test aux_db parameters")
+	qp:down()
+	qp:print("aux.ox, aux.oy")
+	-- Grab the current aux table and temporarily overwrite it with one that we will modify.
+	local old_aux = quickPrint.getAux(font1)
+	local aux = quickPrint.registerFont(font1)
+
+	aux.ox = -5
+	love.graphics.setFont(font1_dupe); qp:write("ox = -5: M")
+	love.graphics.setFont(font1); qp:write("M")
+	aux.ox = 0
+
+	aux.oy = -6
+	love.graphics.setFont(font1_dupe); qp:write("oy = -6: M")
+	love.graphics.setFont(font1); qp:write("M")
+	aux.oy = 0
+
+	qp:down(2)
+	love.graphics.setFont(font1)
+	qp:print("(102.2) aux.ox, aux.oy should not be affected by aux scaling:")
+	aux.sx = 2
+	aux.sy = 2
+	aux.ox = -5
+	love.graphics.setFont(font1_dupe); qp:write("ox = -5: M")
+	love.graphics.setFont(font1); qp:write("M")
+	aux.ox = 0
+
+	aux.oy = -6
+	love.graphics.setFont(font1_dupe); qp:write("oy = -6: M")
+	love.graphics.setFont(font1); qp:write("M")
+	aux.oy = 0
+	aux.sx = 1
+	aux.sy = 1
+
+	-- Restore old aux data settings
+	quickPrint.aux_db[font1] = old_aux
 
 	-- Right side: print to LÖVE Text object
 	qp:setTextObject(txt)

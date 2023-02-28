@@ -1,5 +1,5 @@
 -- QuickPrint: A text drawing library for LÖVE.
--- Version: 1.0.5
+-- Version: 1.0.6
 -- LÖVE supported versions: 11.4
 -- See LICENSE, README.md and the demos for more info.
 
@@ -17,14 +17,15 @@
 
 local quickPrint = {}
 
-local PATH = ... and (...):match("(.-)[^%.]+$") or ""
 
 -- LÖVE Supplemental
 local utf8 = require("utf8")
 
+
 -- Main object metatable
 local _mt_qp = {}
 _mt_qp.__index = _mt_qp
+
 
 -- Override these (either here or in individual qp instances) to change printing behavior.
 -- For example, you could write a wrapper that first prints a black drop-shadow version of the text.
@@ -34,11 +35,24 @@ _mt_qp._text_add = nil
 _mt_qp._text_addf = nil
 
 
--- * Internal *
+--[[
+Auxiliary database of font details. Helps with placement of LÖVE ImageFonts, which
+do not have a baseline metric. The table uses weak references so that it does not prevent
+LÖVE Font objects from being garbage collected.
+
+Note that the Aux DB is module-wide, not per-instance, and fonts may only have one table
+entry.
+--]]
+quickPrint.aux_db = {}
+quickPrint._mt_aux_db = {__mode = "k"}
+setmetatable(quickPrint.aux_db, quickPrint._mt_aux_db)
 
 
 local enum_align = {["left"] = true, ["center"] = true, ["right"] = true, ["justify"] = true}
 local enum_v_align = {["top"] = true, ["middle"] = true, ["true-middle"] = true, ["baseline"] = true, ["bottom"] = true}
+
+
+-- * Internal Error + Utility Functions *
 
 
 local function errType(arg_n, val, expected)
@@ -54,9 +68,6 @@ end
 local function errEnumVAlign(arg_n, val)
 	error("argument #" .. arg_n .. ": invalid vertical align enum: " .. tostring(val), 3)
 end
-
-
--- NOTE: LÖVE Object types are not asserted.
 
 
 local function _love11TextGuard(text)
@@ -105,30 +116,43 @@ local function getColoredTextWidth(coloredtext, font)
 end
 
 
-local function getVAlignOffset(font, v_align)
-	if v_align == "top" then
-		return 0
+local function getVAlignOffset(font, aux, v_align)
+	-- Value for "top" and invalid enums.
+	local ret = 0
 
-	elseif v_align == "true-middle" then
-		return -math.floor(font:getHeight() / 2 + 0.5)
+	if v_align == "true-middle" then
+		ret = -math.floor(aux.sy * (aux.height / 2) + 0.5)
 
 	elseif v_align == "middle" then
-		return -math.floor(font:getBaseline() - (font:getBaseline() - font:getAscent()) / 2 + 0.5)
+		ret = -math.floor(aux.sy * (aux.baseline - (aux.baseline - aux.ascent)) / 2 + 0.5)
 
 	elseif v_align == "baseline" then
-		return -math.floor(font:getBaseline() + 0.5)
+		ret = -math.floor(aux.sy * (aux.baseline) + 0.5)
 
 	elseif v_align == "bottom" then
-		return -font:getHeight()
+		ret = -aux.sy * aux.height
 	end
 
-	return 0
+	-- Multiply the result with self.sy.
+	return ret
 end
 
 
-local function plainWrite(self, str, font)
+-- * / Internal Error + Utility Functions *
+
+
+-- * Internal Write Functions *
+
+
+local function plainWrite(self, str, font, aux)
 	local text_width = font:getWidth(str)
 	local align = self.align
+	local scale_x = self.sx * aux.sx
+	local scale_y = self.sy * aux.sy
+
+	if font ~= self.line_font then
+		self:clearKerningMemory()
+	end
 
 	-- Handle tab placement.
 	if self.tabs then
@@ -144,13 +168,13 @@ local function plainWrite(self, str, font)
 				self.x = math.max(self.x, tab_x)
 
 			elseif align == "center" then
-				self.x = math.max(self.x, tab_x - math.floor(text_width*self.sx/2))
+				self.x = math.max(self.x, tab_x - math.floor(text_width*scale_x/2))
 
 			elseif align == "right" then
-				self.x = math.max(self.x, tab_x - text_width*self.sx)
+				self.x = math.max(self.x, tab_x - text_width*scale_x)
 			end
 
-			self.last_glyph = false
+			self:clearKerningMemory()
 		end
 	end
 
@@ -164,24 +188,24 @@ local function plainWrite(self, str, font)
 			self.x = self.x + font:getKerning(self.last_glyph, utf8.codepoint(str, 1))
 		end
 
-		local px = self.origin_x + self.x
-		local py = self.origin_y + self.y
+		local px = self.origin_x + self.x + aux.ox
+		local py = self.origin_y + self.y + aux.oy
 
-		py = py + getVAlignOffset(self:getFont(), self.v_align)
+		py = py + getVAlignOffset(font, aux, self.v_align) * self.sy
 
 		-- NOTE: plainWrite() on its own does not move the cursor down to the next line, even if the string contains '\n'.
 		if self.text_object then
 			--if _love11TextGuard(text) then
 			if string.find(str, "%S") then
 				if self._text_add then
-					self._text_add(self.text_object, str, px, py, 0, self.sx, self.sy, 0, 0, 0, 0)
+					self._text_add(self.text_object, str, px, py, 0, scale_x, scale_y, 0, 0, 0, 0)
 				else
-					self.text_object:add(str, px, py, 0, self.sx, self.sy, 0, 0, 0, 0)
+					self.text_object:add(str, px, py, 0, scale_x, scale_y, 0, 0, 0, 0)
 				end
 			end
 
 		else
-			self._love_print(str, px, py, 0, self.sx, self.sy, 0, 0, 0, 0)
+			self._love_print(str, px, py, 0, scale_x, scale_y, 0, 0, 0, 0)
 		end
 	end
 
@@ -191,31 +215,33 @@ local function plainWrite(self, str, font)
 		self.last_glyph = utf8.codepoint(str, utf8.offset(str, -1))
 	end
 
-	self.x = math.ceil(self.x + text_width * self.sx)
+	self.x = math.ceil(self.x + text_width * scale_x)
 	self:advanceTab()
 end
 
 
-local function formattedPrintLogic(self, text, align, font, px, py)
-	local scaled_w = math.ceil(self.ref_w / math.max(self.sx, 0.0000001)) -- avoid div/0
-	py = py + getVAlignOffset(font, self.v_align)
+local function formattedPrintLogic(self, text, align, font, aux, px, py)
+	local scale_x = self.sx * aux.sx
+	local scale_y = self.sy * aux.sy
+	local scaled_w = math.ceil(self.ref_w / math.max(scale_x, 0.0000001)) -- avoid div/0
+	py = py + getVAlignOffset(font, aux, self.v_align) * self.sy
 
 	if self.text_object then
 		if _love11TextGuard(text) then
 			if self._text_addf then
-				self.text_addf(self.text_object, text, scaled_w, align, px, py, 0, self.sx, self.sy, 0, 0, 0, 0)
+				self.text_addf(self.text_object, text, scaled_w, align, px, py, 0, scale_x, scale_y, 0, 0, 0, 0)
 			else
-				self.text_object:addf(text, scaled_w, align, px, py, 0, self.sx, self.sy, 0, 0, 0, 0)
+				self.text_object:addf(text, scaled_w, align, px, py, 0, scale_x, scale_y, 0, 0, 0, 0)
 			end
 		end
 
 	else
-		self._love_printf(text, px, py, scaled_w, align, 0, self.sx, self.sy, 0, 0, 0, 0)
+		self._love_printf(text, px, py, scaled_w, align, 0, scale_x, scale_y, 0, 0, 0, 0)
 	end
 end
 
 
--- * / Internal *
+-- * / Internal Write Functions *
 
 
 -- * Public Functions *
@@ -243,6 +269,10 @@ function quickPrint.new(ref_w, ref_h)
 	-- The last character in Unicode Code Point integer form, or false if there is no last character.
 	self.last_glyph = false
 
+	-- The last font object used on a single line, if known. Differences between last and current font
+	-- may cause last_glyph to be cleared.
+	self.line_font = false
+
 	-- These are passed to love.graphics.print(). Cursor movement will attempt to take scale into account.
 	self.sx = 1
 	self.sy = 1
@@ -258,8 +288,9 @@ function quickPrint.new(ref_w, ref_h)
 	-- treated as "left" for plain writes.
 	self.align = "left" -- "left", "center", "right", "justify"
 
-	-- Vertical alignment of text, relative to the cursor. "top" is recommended, but the others might
-	-- be helpful if you are mixing fonts. "middle" and "baseline" should not be used with LÖVE ImageFonts.
+	-- Vertical alignment of text, relative to the cursor. "top" is recommended when using a single font.
+	-- The others might be helpful if you are mixing fonts. If using "middle" or "baseline" with an
+	-- ImageFont, you must set the baseline metric in the font's aux table,
 	self.v_align = "top" -- "top", "middle", "true-middle", "baseline", "bottom"
 
 	-- Sequence of "tab stops" with a per-pixel granularity, or false to disable tabs.
@@ -280,6 +311,48 @@ function quickPrint.new(ref_w, ref_h)
 end
 
 
+function quickPrint.registerFont(font)
+	-- Assertions
+	-- [[
+	if type(font) ~= "userdata" then errType(1, font, "userdata (LÖVE Font)") end
+	--]]
+
+	local entry = {}
+
+	entry.height = font:getHeight()
+	entry.ascent = font:getAscent()
+	entry.descent = font:getDescent()
+	entry.baseline = font:getBaseline()
+
+	-- Font scale. Is multiplied with qp.sx and qp.sy.
+	entry.sx = 1.0
+	entry.sy = 1.0
+
+	-- Font offset in pixels (not scaled by aux.sx and aux.sy).
+	entry.ox = 0
+	entry.oy = 0
+
+	-- Overwrites any existing entry.
+	quickPrint.aux_db[font] = entry
+
+	return entry
+end
+
+
+function quickPrint.getAux(font)
+	-- No assertions.
+	-- * 'font' is type-checked by quickPrint.registerFont().
+
+	local aux = quickPrint.aux_db[font]
+
+	if not aux then
+		aux = quickPrint.registerFont(font)
+	end
+
+	return aux
+end
+
+
 -- * / Public Functions *
 
 
@@ -292,7 +365,10 @@ end
 
 
 function _mt_qp:setTextObject(text_object)
-	-- No assertions.
+	-- Assertions
+	-- [[
+	if text_object and type(text_object) ~= "userdata" then errType(1, text_object, "false/nil or userdata (LÖVE Text Object)") end
+	--]]
 
 	self.text_object = text_object or false
 end
@@ -359,7 +435,7 @@ function _mt_qp:advanceX(width)
 
 	self.x = math.ceil(self.x + width)
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -374,7 +450,7 @@ function _mt_qp:advanceXStr(str)
 
 	self.x = math.ceil(self.x + width)
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -386,7 +462,7 @@ function _mt_qp:setXMin(x_min)
 
 	self.x = math.max(self.x, x_min)
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -401,7 +477,7 @@ function _mt_qp:advanceXCoarse(coarse_x, margin)
 
 	self.x = math.max(self.x, math.floor(((self.x + margin + coarse_x) / coarse_x)) * coarse_x)
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -413,7 +489,7 @@ function _mt_qp:advanceTab()
 		end
 		if tab_x and self.x < tab_x then
 			self.x = tab_x
-			self.last_glyph = false
+			self:clearKerningMemory()
 		end
 
 		self.tab_i = self.tab_i + 1
@@ -449,7 +525,7 @@ function _mt_qp:setPosition(x, y)
 	self.y = y
 
 	self.tab_i = math.huge -- invalidate tab stop state
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -462,7 +538,7 @@ function _mt_qp:setXPosition(x)
 	self.x = x
 
 	self.tab_i = math.huge
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -505,7 +581,7 @@ function _mt_qp:movePosition(dx, dy)
 	self.y = self.y + dy
 
 	self.tab_i = math.huge
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -518,7 +594,7 @@ function _mt_qp:moveXPosition(dx)
 	self.x = self.x + dx
 
 	self.tab_i = math.huge
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -549,7 +625,7 @@ function _mt_qp:setOrigin(origin_x, origin_y)
 	self.y = 0
 
 	self.tab_i = 1
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -565,7 +641,7 @@ function _mt_qp:setXOrigin(origin_x)
 	self.y = 0
 
 	self.tab_i = 1
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -581,7 +657,7 @@ function _mt_qp:setYOrigin(origin_y)
 	self.y = 0
 
 	self.tab_i = 1
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -615,7 +691,7 @@ function _mt_qp:moveOrigin(dx, dy)
 	self.y = 0
 
 	self.tab_i = 1
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -630,7 +706,7 @@ function _mt_qp:setReferenceDimensions(ref_w, ref_h)
 	self.ref_h = ref_h
 
 	self.tab_i = 1
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -648,7 +724,7 @@ function _mt_qp:setReferenceWidth(ref_w)
 	self.ref_w = ref_w
 
 	self.tab_i = 1
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -666,7 +742,7 @@ function _mt_qp:setReferenceHeight(ref_h)
 	self.ref_h = ref_h
 
 	self.tab_i = 1
-	self.last_glyph = false
+	self:clearKerningMemory()
 end
 
 
@@ -712,7 +788,7 @@ function _mt_qp:reset()
 	self.y = 0
 
 	self.tab_i = 1
-	self.last_glyph = false
+	self:clearKerningMemory()
 	self.align = "left"
 	self.v_align = "top"
 end
@@ -728,17 +804,20 @@ function _mt_qp:down(qty)
 
 	if qty > 0 then
 		local font = self:getFont()
+		local aux = quickPrint.getAux(font)
+		local scale_y = self.sy * aux.sy
 		self.x = 0
-		self.y = math.ceil(self.y + self.pad_v + (qty * (font:getHeight() * font:getLineHeight() * self.sy)))
+		self.y = math.ceil(self.y + self.pad_v + (qty * (font:getHeight() * font:getLineHeight() * scale_y)))
 
 		self.tab_i = 1
-		self.last_glyph = false
+		self:clearKerningMemory()
 	end
 end
 
 
 function _mt_qp:clearKerningMemory()
 	self.last_glyph = false
+	self.line_font = false
 end
 
 
@@ -752,9 +831,10 @@ function _mt_qp:write(...)
 	-- No assertions.
 
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
 	for i = 1, select("#", ...) do
-		plainWrite(self, tostring(select(i, ...)), font)
+		plainWrite(self, tostring(select(i, ...)), font, aux)
 	end
 end
 
@@ -766,9 +846,10 @@ function _mt_qp:writeSeq(tbl)
 	--]]
 
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
 	for i = 1, #tbl do
-		plainWrite(self, tostring(tbl[i]), font)
+		plainWrite(self, tostring(tbl[i]), font, aux)
 	end
 end
 
@@ -777,8 +858,9 @@ function _mt_qp:write1(s1)
 	-- No assertions.
 
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
-	plainWrite(self, tostring(s1), font)
+	plainWrite(self, tostring(s1), font, aux)
 end
 
 
@@ -786,9 +868,10 @@ function _mt_qp:write2(s1, s2)
 	-- No assertions.
 
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
-	plainWrite(self, tostring(s1), font)
-	plainWrite(self, tostring(s2), font)
+	plainWrite(self, tostring(s1), font, aux)
+	plainWrite(self, tostring(s2), font, aux)
 end
 
 
@@ -796,10 +879,11 @@ function _mt_qp:write3(s1, s2, s3)
 	-- No assertions.
 
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
-	plainWrite(self, tostring(s1), font)
-	plainWrite(self, tostring(s2), font)
-	plainWrite(self, tostring(s3), font)
+	plainWrite(self, tostring(s1), font, aux)
+	plainWrite(self, tostring(s2), font, aux)
+	plainWrite(self, tostring(s3), font, aux)
 end
 
 
@@ -807,22 +891,24 @@ function _mt_qp:write4(s1, s2, s3, s4)
 	-- No assertions.
 
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
-	plainWrite(self, tostring(s1), font)
-	plainWrite(self, tostring(s2), font)
-	plainWrite(self, tostring(s3), font)
-	plainWrite(self, tostring(s4), font)
+	plainWrite(self, tostring(s1), font, aux)
+	plainWrite(self, tostring(s2), font, aux)
+	plainWrite(self, tostring(s3), font, aux)
+	plainWrite(self, tostring(s4), font, aux)
 end
 
 
 function _mt_qp:print(...)
 	-- No assertions.
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
 	for i = 1, select("#", ...) do
-		plainWrite(self, tostring(select(i, ...)), font)
+		plainWrite(self, tostring(select(i, ...)), font, aux)
 	end
 
 	self:down()
@@ -835,11 +921,12 @@ function _mt_qp:printSeq(tbl)
 	if type(tbl) ~= "table" then errType(1, tbl, "table") end
 	--]]
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
 	for i = 1, #tbl do
-		plainWrite(self, tostring(tbl[i]), font)
+		plainWrite(self, tostring(tbl[i]), font, aux)
 	end
 
 	self:down()
@@ -849,10 +936,11 @@ end
 function _mt_qp:print1(s1)
 	-- No assertions.
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 	
-	plainWrite(self, tostring(s1), font)
+	plainWrite(self, tostring(s1), font, aux)
 
 	self:down()
 end
@@ -861,11 +949,12 @@ end
 function _mt_qp:print2(s1, s2)
 	-- No assertions.
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
-	plainWrite(self, tostring(s1), font)
-	plainWrite(self, tostring(s2), font)
+	plainWrite(self, tostring(s1), font, aux)
+	plainWrite(self, tostring(s2), font, aux)
 
 	self:down()
 end
@@ -874,12 +963,13 @@ end
 function _mt_qp:print3(s1, s2, s3)
 	-- No assertions.
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
-	plainWrite(self, tostring(s1), font)
-	plainWrite(self, tostring(s2), font)
-	plainWrite(self, tostring(s3), font)
+	plainWrite(self, tostring(s1), font, aux)
+	plainWrite(self, tostring(s2), font, aux)
+	plainWrite(self, tostring(s3), font, aux)
 
 	self:down()
 end
@@ -888,13 +978,14 @@ end
 function _mt_qp:print4(s1, s2, s3, s4)
 	-- No assertions.
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
-	plainWrite(self, tostring(s1), font)
-	plainWrite(self, tostring(s2), font)
-	plainWrite(self, tostring(s3), font)
-	plainWrite(self, tostring(s4), font)
+	plainWrite(self, tostring(s1), font, aux)
+	plainWrite(self, tostring(s2), font, aux)
+	plainWrite(self, tostring(s3), font, aux)
+	plainWrite(self, tostring(s4), font, aux)
 
 	self:down()
 end
@@ -907,15 +998,10 @@ function _mt_qp:writefSingle(text, align)
 	elseif align and not enum_align[align] then errEnumAlign(2, align) end
 	--]]
 
-	--[[
-	NOTE: We need a scaled copy of the base width to get an acceptable wrap-limit for scaled pixel art text.
-	However, the original base width must be used for actual placement.
-	--]]
+	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
-	local scale_multiplier = 1 / math.max(self.sx, 0.0000001) -- avoid div/0
-	local scaled_w = math.ceil(self.ref_w * scale_multiplier)
-
-	self.last_glyph = false
+	self:clearKerningMemory()
 	self.x = 0
 
 	-- Collect tab stop info
@@ -939,7 +1025,6 @@ function _mt_qp:writefSingle(text, align)
 
 	align = align or self.align
 
-	local font = self:getFont()
 	local text_width = type(text) == "string" and font:getWidth(text) or getColoredTextWidth(text, font)
 
 	if tab_x then
@@ -954,7 +1039,7 @@ function _mt_qp:writefSingle(text, align)
 		end
 	end
 
-	formattedPrintLogic(self, text, align, font, self.origin_x + self.x, self.origin_y + self.y)
+	formattedPrintLogic(self, text, align, font, aux, self.origin_x + self.x, self.origin_y + self.y)
 	self:advanceTab()
 end
 
@@ -983,8 +1068,8 @@ function _mt_qp:printf(text, align)
 
 	-- Tab stops are not taken into account.
 	align = align or self.align
-
-	local scaled_w = math.ceil(self.ref_w / math.max(self.sx, 0.0000001)) -- avoid div/0
+	local font = self:getFont()
+	local aux = quickPrint.getAux(font)
 
 	-- [WARN] [PERF] Multi-line handling needs to generate a throwaway table to determine how far down to move
 	-- the Y cursor. To reduce overhead (for big paragraphs), you can printf() to a LÖVE Text object only when
@@ -994,11 +1079,12 @@ function _mt_qp:printf(text, align)
 	-- If this is the last thing you care about printing and you don't need to keep track of the Y cursor after
 	-- this point, you can use qp:printfSingle() instead.
 
-	self.last_glyph = false
+	self:clearKerningMemory()
 	self.x = 0
-	local font = self:getFont()
-	formattedPrintLogic(self, text, align, font, self.origin_x + self.x, self.origin_y + self.y)
+	formattedPrintLogic(self, text, align, font, aux, self.origin_x + self.x, self.origin_y + self.y)
 
+	local scale_x = self.sx * aux.sx
+	local scaled_w = math.ceil(self.ref_w / math.max(scale_x, 0.0000001)) -- avoid div/0
 	local wid, wrap_t = font:getWrap(text, scaled_w)
 
 	-- getWrap() accounts for '\n' embedded in strings, and it also handles coloredtext sequences.

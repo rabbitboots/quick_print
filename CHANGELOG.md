@@ -1,5 +1,14 @@
 # QuickPrint Changelog
 
+## v1.0.6: 2023-02-28
+* Added `aux_db`, a table of supplementary font information. Allows setting stand-in vertical metrics and scaling for LÖVE ImageFonts, thereby solving some issues in 1.0.5 related to vertical alignment. New public functions:
+  * `quickPrint.registerFont(font)`
+  * `local aux = quickPrint.getAux(font)`
+* Added `qp.line_font` as a way to automatically clear kerning memory when the current font doesn't match the last-known used font between write calls (on a single line).
+* Shuffled some internal functions around while adding `aux_db`.
+* Changed policy on not doing type-check assertions on LÖVE Objects. LÖVE Text Objects / TextBatches and Fonts are now checked as `userdata`.
+* Removed obsolete comments in `qp:writeFSingle`.
+
 
 ## v1.0.5: 2023-02-27
 * Added `qp.v_align` (`top` (default), `middle`, `true-middle`, `baseline`, `bottom`) and associated methods:

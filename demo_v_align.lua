@@ -28,20 +28,29 @@ local font_ttf_b = love.graphics.newFont("demo_fonts/ttf/DejaVu_Mono/dejavu_mono
 
 -- ImageFont metadata
 local i_font_glyphs = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-local i_glyphs_437 =
- "☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼" ..
-" !\"#$%&'()*+,-./0123456789:;<=>?" ..
-"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_" ..
-"`abcdefghijklmnopqrstuvwxyz{|}~⌂" ..
-"ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒ" ..
-"áíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐" ..
-"└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀" ..
-"αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"
 
 local font_img_a = love.graphics.newImageFont("demo_fonts/imagefont/term_thick_var.png", i_font_glyphs)
 local font_img_b = love.graphics.newImageFont("demo_fonts/imagefont/microtonal_mono.png", i_font_glyphs)
 font_img_a:setFilter("nearest", "nearest")
 font_img_b:setFilter("nearest", "nearest")
+
+-- Set up auxiliary data for ImageFonts.
+do
+	local aux
+	aux = quickPrint.registerFont(font_img_a)
+	aux.ascent = 8
+	aux.descent = 2
+	aux.baseline = 8
+	aux.sx = 2
+	aux.sy = 2
+
+	aux = quickPrint.registerFont(font_img_b)
+	aux.ascent = 6
+	aux.descent = 0
+	aux.baseline = 6
+	aux.sx = 2
+	aux.sy = 2
+end
 
 
 function love.keypressed(kc, sc)
@@ -59,11 +68,15 @@ end
 
 
 local function drawCursorXLine(qp)
-	local rr, gg, bb, aa = love.graphics.getColor()
+	love.graphics.push("all")
+
+	love.graphics.setLineWidth(1)
+	love.graphics.setLineStyle("rough")
 
 	love.graphics.setColor(1, 0, 0, 1)
 	love.graphics.line(0.5, qp.y + qp.origin_y, love.graphics.getWidth() - 1 + 0.5, qp.y + qp.origin_y)
-	love.graphics.setColor(rr, gg, bb, aa)
+
+	love.graphics.pop()
 end
 
 
@@ -81,7 +94,7 @@ function love.draw()
 	--qp:setScale()
 
 	drawCursorXLine(qp)
-	qp:write("Top, middle, baseline, bottom alignment: ")
+	qp:write("Top, middle, true-middle, baseline, bottom alignment: ")
 
 	qp:setVAlign("top")
 	qp:write("M")
@@ -89,6 +102,11 @@ function love.draw()
 	qp:write("M")
 
 	qp:setVAlign("middle")
+	qp:write("M")
+	qp:write("M")
+	qp:write("M")
+
+	qp:setVAlign("true-middle")
 	qp:write("M")
 	qp:write("M")
 	qp:write("M")
@@ -129,64 +147,67 @@ function love.draw()
 	drawCursorXLine(qp)
 
 	love.graphics.setFont(font_ttf_a)
-	qp:write("ImageFont top, true-middle, bottom: ")
-	qp:setVAlign("top")
+	qp:write("ImageFont top, middle, true-middle, baseline, bottom: ")
 	love.graphics.setFont(font_img_a)
+
+	qp:setVAlign("top")
 	qp:write("M")
-	qp:write("M")
+
+	qp:setVAlign("middle")
 	qp:write("M")
 
 	qp:setVAlign("true-middle")
-	love.graphics.setFont(font_img_a)
 	qp:write("M")
-	qp:write("M")
+
+	qp:setVAlign("baseline")
 	qp:write("M")
 
 	qp:setVAlign("bottom")
-	love.graphics.setFont(font_img_a)
-	qp:write("M")
-	qp:write("M")
 	qp:write("M")
 
 	qp:down(3*3)
 	drawCursorXLine(qp)
 
 	love.graphics.setFont(font_ttf_a)
-	qp:write("ImageFont baseline workaround: ")
-	--[[
-	ImageFonts only have height as a valid vertical metric. As a workaround, you can temporarily offset
-	the cursor Y position (mind the scaling), draw your ImageFont text, then restore the cursor Y.
-	This font (term_thick) has a baseline of... let's say 8.
-	--]]
+	qp:write("ImageFont + aux_db integration: ")
 
 	qp:setVAlign("baseline")
 	love.graphics.setFont(font_ttf_a)
 	qp:write("M")
 	qp:write("M")
-	qp:write("M")
+	qp:write("M ")
 	
-	local img_baseline = 8
-	local img_scale = 3
 	love.graphics.setFont(font_img_a)
-	qp:setScale(img_scale, img_scale)
-	qp:moveYPosition(-img_baseline * img_scale)
 	qp:setVAlign("top")
-
 	qp:write("M")
+	qp:setVAlign("middle")
 	qp:write("M")
+	qp:setVAlign("true-middle")
 	qp:write("M")
-
-	qp:moveYPosition(img_baseline * img_scale)
-	qp:setScale(1, 1)
 	qp:setVAlign("baseline")
-	love.graphics.setFont(font_ttf_a)
 	qp:write("M")
+	qp:setVAlign("bottom")
+	qp:write("M")
+
+	love.graphics.setFont(font_img_b)
+	qp:setVAlign("top")
+	qp:write("M")
+	qp:setVAlign("middle")
+	qp:write("M")
+	qp:setVAlign("true-middle")
+	qp:write("M")
+	qp:setVAlign("baseline")
+	qp:write("M")
+	qp:setVAlign("bottom")
+	qp:write("M")
+
+	love.graphics.setFont(font_ttf_a)
+	qp:write(" M")
 	qp:write("M")
 	qp:write("M")
 
 	qp:down(3)
-	qp:setVAlign("true-middle")
-
+	qp:setVAlign("top")
 
 	love.graphics.setFont(_default_font)
 	local v_sep = love.graphics.getHeight() - math.ceil(_default_font:getHeight() * qp.sy) - 64

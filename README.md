@@ -2,7 +2,7 @@
 
 QuickPrint is a text drawing library for the [LÖVE](https://love2d.org/) Framework.
 
-Version: **v1.0.5** (See CHANGELOG.md for potential breaking changes from v1.0.3.)
+Version: **v1.0.6** (See CHANGELOG.md for potential breaking changes from v1.0.3.)
 
 
 ![quickprint\_gh\_1](https://user-images.githubusercontent.com/23288188/168460007-1d08b8ba-3893-4e07-a01b-21a2f3332a8e.png)
@@ -13,6 +13,7 @@ Version: **v1.0.5** (See CHANGELOG.md for potential breaking changes from v1.0.3
 * Virtual tab stops
 * Can print to LÖVE Text Objects
 * Basic support for scaled text (for pixel-art LÖVE ImageFonts)
+* Tweak per-font vertical metrics and scale using an intermediate table
 
 
 ## Hello World
@@ -57,10 +58,33 @@ QuickPrint's writing functions are split into "plain" and "formatted" categories
 Creates and returns a new quick\_print state table.
 
 `quickPrint.new(ref_w, ref_h)`
+
 * `ref_w`: (math.huge) Reference width for the cursor. Affects formatted print calls with non-left alignment.
 * `ref_h`: (math.huge) Reference height for the cursor. Doesn't affect printing, but may help with other tasks such as setting a draw scissor.
 
 **Returns:** A new `qp` state table.
+
+
+### quickPrint.registerFont
+
+Registers a font with the auxiliary font database (see *Auxiliary Data* section). All fonts are registered upon first being used with QuickPrint, but you may register fonts ahead of time to apply additional tweaks. This can be helpful with LÖVE ImageFonts. Note that if there is an existing aux table for this font, it will be overwritten by a new one.
+
+`local aux = quickPrint.registerFont(font)`
+
+* `font`: The LÖVE Font object to register.
+
+**Returns:** The aux data table for this font.
+
+
+### quickPrint.getAux
+
+Gets a font's auxiliary data table (see *Auxiliary Data* section). If not found, creates, registers and returns a new table.
+
+`local aux = quickPrint.getAux(font)`
+
+* `font`: The LÖVE Font object to register.
+
+**Returns:** The font's auxiliary data table.
 
 
 ## State Get/Set, Cursor Movement, Tab Advance
@@ -152,6 +176,12 @@ Gets the horizontal align mode.
 
 Sets the vertical align mode. Text is placed relative to the cursor Y and the current font's vertical metrics.
 
+`qp:setVAlign(v_align)`
+
+* `v_align`: The vertical align mode. Can be `top`, `middle`, `true-middle`, `baseline`, or `bottom`.
+
+The vertical align modes are:
+
 `top`: (default) Cursor is at the top of the text.
 
 `middle`: Cursor is at the midpoint between the ascent and baseline metrics.
@@ -160,11 +190,7 @@ Sets the vertical align mode. Text is placed relative to the cursor Y and the cu
 
 `bottom`: Cursor is at the bottom of the text.
 
-**WARNING**: Do not use `baseline` or `middle` with LÖVE ImageFonts. They rely on vertical metrics which aren't valid for this type of font. The text will appear at the wrong vertical position.
-
-`qp:setVAlign(v_align)`
-
-* `v_align`: The vertical align mode. Can be `top`, `middle`, `true-middle`, `baseline`, or `bottom`.
+**NOTE**: When using `baseline` or `middle` vertical alignment with LÖVE ImageFonts, you must set the baseline metric in the font's aux table. (Except for height, ImageFonts do not have valid vertical metrics.) Otherwise, the text will appear at the wrong vertical position. See *Auxiliary Data* for more info.
 
 
 ### qp:getVAlign
@@ -603,11 +629,42 @@ Prints one string or `coloredtext` sequence using formatting features provided b
 * `align`: (`qp.pf_align`) LÖVE AlignMode enum: `"left"`, `"center"`, `"right"` or `"justify"`.
 
 
+## Auxiliary Data
+
+Added in 1.0.6, The `quickPrint.aux_db` table holds supplemental metadata for fonts.
+
+An aux data table contains the following fields:
+
+* `height`: Defaults to `font:getHeight()`.
+
+* `ascent`: Defaults to `font:getAscent()`.
+
+* `descent`: Defaults to `font:getDescent()`.
+
+* `baseline`: Defaults to `font:getBaseline()`.
+
+* `sx`: (1.0) Horizontal scale, multiplied with `qp.sx`.
+
+* `sy`: (1.0) Vertical scale, multiplied with `qp.sy`.
+
+* `ox`: (0) Horizontal drawing offset in pixels. Not scaled by `aux.sx`.
+
+* `oy`: (0) Vertical drawing offset in pixels. Not scaled by `aux.sy`.
+
+The ascent, descent and baseline metrics are invalid for LÖVE ImageFonts, so if you want to use baseline vertical alignment with them, you should change those settings in their aux tables.
+
+As Font objects are used as keys, a font may have only one aux data table assigned at a time. The `aux_db` table uses weak keys, so it won't prevent Fonts from being cleaned by the garbage collector.
+
+
 ## Tips, Limitations
 
-* Switching fonts between write operations on the same line may lead to inconsistent offsetting and kerning. Text objects do not support multiple simultaneous fonts, so you shouldn't change a Text object's font as you write to it.
+* QuickPrint does not currently handle DPI scaling or RTL text (LÖVE 12).
+
+* Text objects do not support multiple simultaneous fonts, so you shouldn't change a Text object's font as you write to it.
 
 * QuickPrint is not optimized, and cannot be optimized very much given its design. (It's quick as in *quick and dirty*.) If you have a lot of text that rarely changes, you can save some CPU cycles by printing it to a LÖVE Text object and drawing that, only clearing and rewriting the Text when there's a change. Rendering to a canvas is another option.
+
+* When performing multiple writes to a single line, QuickPrint holds a reference to the last font used. This could prevent it from being cleaned by the garbage collector. The reference is dropped whenever kerning state is cleared, so you can drop it manually by calling `qp:clearKerningMemory()`.
 
 
 ## Known Bugs

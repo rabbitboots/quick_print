@@ -1,5 +1,12 @@
 # QuickPrint Changelog
 
+## v1.0.7: 2023-03-16
+* The core library is functionally identical to v1.0.6. All changes involve demo files and resources:
+  * Removed one BMFont due to a Reserved Font Name mismatch in the original TrueType font's license text.
+  * Removed a Reserved Font Name from demo2. Converting from TTF to BMFont counts as a modification, so I can't display that name to the user. Also renamed the font file, and added its OFL license text to the folder.
+  * Removed one TrueType font with a Reserved Font Name mismatch between its bundled OFL.txt and its embedded copyright notice.
+
+
 ## v1.0.6: 2023-02-28
 * Added `aux_db`, a table of supplementary font information. Allows setting stand-in vertical metrics and scaling for LÖVE ImageFonts, thereby solving some issues in 1.0.5 related to vertical alignment. New public functions:
   * `quickPrint.registerFont(font)`

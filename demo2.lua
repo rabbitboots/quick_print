@@ -107,19 +107,16 @@ font_names[1] = "<LÖVE Default>"
 fonts[1] = fontSet.newTrueType(false)
 
 font_names[2] = "DejaVu Sans Mono, Book"
-fonts[2] = fontSet.newTrueType("demo_fonts/ttf/DejaVu_Mono/dejavu_mono.ttf")
+fonts[2] = fontSet.newTrueType("demo_fonts/ttf/DejaVuSansMono/DejaVuSansMono.ttf")
 
-font_names[3] = "Damion"
-fonts[3] = fontSet.newTrueType("demo_fonts/ttf/Damion/Damion-Regular.ttf")
+font_names[3] = "Montserrat, Regular"
+fonts[3] = fontSet.newTrueType("demo_fonts/ttf/Montserrat/Montserrat-Regular.ttf")
 
-font_names[4] = "Montserrat, Regular"
-fonts[4] = fontSet.newTrueType("demo_fonts/ttf/Montserrat/Montserrat-Regular.ttf")
+font_names[4] = "Open Sans Condensed, Medium"
+fonts[4] = fontSet.newTrueType("demo_fonts/ttf/Open_Sans_Condensed/OpenSans_Condensed-Medium.ttf")
 
-font_names[5] = "Open Sans Condensed, Medium"
-fonts[5] = fontSet.newTrueType("demo_fonts/ttf/Open_Sans_Condensed/OpenSans_Condensed-Medium.ttf")
-
-font_names[6] = "Cabin Bold"
-fonts[6] = fontSet.newTrueType("demo_fonts/ttf/Cabin-v1.5/Cabin-Bold-TTF.ttf")
+font_names[5] = "Cabin Bold"
+fonts[5] = fontSet.newTrueType("demo_fonts/ttf/Cabin-v1.5/Cabin-Bold-TTF.ttf")
 
 
 -- ImageFont
@@ -135,29 +132,26 @@ local i_glyphs_437 =
 "αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■"
 
 
-font_names[7] = "term_thick_var (Base size: 9)"
-fonts[7] = fontSet.newImageFont({{size = 9, src = "demo_fonts/imagefont/term_thick_var.png"}}, i_font_glyphs)
+font_names[6] = "term_thick_var (Base size: 9)"
+fonts[6] = fontSet.newImageFont({{size = 9, src = "demo_fonts/imagefont/term_thick_var.png"}}, i_font_glyphs)
+fonts[6]:setFilter("nearest", "nearest")
+
+font_names[7] = "term_thin_var (Base size: 9)"
+fonts[7] = fontSet.newImageFont({{size = 9, src = "demo_fonts/imagefont/term_thin_var.png"}}, i_font_glyphs)
 fonts[7]:setFilter("nearest", "nearest")
 
-font_names[8] = "term_thin_var (Base size: 9)"
-fonts[8] = fontSet.newImageFont({{size = 9, src = "demo_fonts/imagefont/term_thin_var.png"}}, i_font_glyphs)
+font_names[8] = "microtonal_mono (Base size: 7)"
+fonts[8] = fontSet.newImageFont({{size = 7, src = "demo_fonts/imagefont/microtonal_mono.png"}}, i_font_glyphs)
 fonts[8]:setFilter("nearest", "nearest")
 
-font_names[9] = "microtonal_mono (Base size: 7)"
-fonts[9] = fontSet.newImageFont({{size = 7, src = "demo_fonts/imagefont/microtonal_mono.png"}}, i_font_glyphs)
+font_names[9] = "dosbox_cp437 (Base size: 14)"
+fonts[9] = fontSet.newImageFont({{size = 14, src = "demo_fonts/imagefont/dosbox_cp437.png"}}, i_glyphs_437)
 fonts[9]:setFilter("nearest", "nearest")
-
-font_names[10] = "dosbox_cp437 (Base size: 14)"
-fonts[10] = fontSet.newImageFont({{size = 14, src = "demo_fonts/imagefont/dosbox_cp437.png"}}, i_glyphs_437)
-fonts[10]:setFilter("nearest", "nearest")
 
 
 -- BMFont
-font_names[11] = "ClickerScript (BMF Conv.) (Base size: 24)"
-fonts[11] = fontSet.newBMFont({{size = 24, src = "demo_fonts/bmf/Clicker_Script/clicker_24.fnt"}})
-
-font_names[12] = "Quantico (BMF Conv.) (Base size: 24)"
-fonts[12] = fontSet.newBMFont({{size = 24, src = "demo_fonts/bmf/Quantico_Regular/quantico_24.fnt"}})
+font_names[10] = "Test BMFont 01 (Base size: 24)"
+fonts[10] = fontSet.newBMFont({{size = 24, src = "demo_fonts/bmf/Test_BMF_01/Test_BMF_01.fnt"}})
 
 
 -- Demo logic

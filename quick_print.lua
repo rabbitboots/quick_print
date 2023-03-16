@@ -1,5 +1,5 @@
 -- QuickPrint: A text drawing library for LÖVE.
--- Version: 1.0.6
+-- Version: 1.0.7
 -- LÖVE supported versions: 11.4
 -- See LICENSE, README.md and the demos for more info.
 

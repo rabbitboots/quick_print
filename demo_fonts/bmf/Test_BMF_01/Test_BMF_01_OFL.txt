@@ -1,6 +1,6 @@
 Copyright (c) 2011, Matthew Desmond (http://www.madtype.com | mattdesmond@gmail.com),with Reserved Font Name Quantico.
 
-NOTE: This is a Modified Version (converted from TrueType to BMFont). Per license condition #3, do not present the above Reserved Font Name(s) to the user. Additionally, please do not contact the original author(s) for support of this Modified Version.
+NOTE: This is a Modified Version (converted from TrueType to BMFont). Per license condition #3, do not present the above Reserved Font Name(s) to the user.
 
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.

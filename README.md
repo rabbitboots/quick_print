@@ -2,7 +2,7 @@
 
 QuickPrint is a text drawing library for the [LÖVE](https://love2d.org/) Framework.
 
-Version: **v1.0.7**
+Version: **v1.0.8**
 
 
 ![quickprint\_gh\_1](https://user-images.githubusercontent.com/23288188/168460007-1d08b8ba-3893-4e07-a01b-21a2f3332a8e.png)
@@ -172,6 +172,26 @@ Gets the horizontal align mode.
 **Returns:** The align LÖVE enum.
 
 
+### qp:setDefaultAlign
+
+Sets the default horizontal align mode, which is applied by `qp:reset()`.
+
+`qp:setDefaultAlign(align)`
+
+* `align`: The LÖVE align mode. Can be `left`, `center`, `right`, or `justify`.
+
+**See:** LÖVE Wiki: [AlignMode](https://love2d.org/wiki/AlignMode)
+
+
+### qp:getDefaultAlign
+
+Gets the default horizontal align mode.
+
+`local default_align = qp:getAlign()`
+
+**Returns:** The default align LÖVE enum.
+
+
 ### qp:setVAlign
 
 Sets the vertical align mode. Text is placed relative to the cursor Y and the current font's vertical metrics.
@@ -200,6 +220,24 @@ Gets the vertical align mode.
 `local v_align = qp:getVAlign()`
 
 **Returns:** The vertical align mode.
+
+
+### qp:setDefaultVAlign
+
+Sets the default vertical align mode, applied in `qp:reset()`.
+
+`qp:setDefaultVAlign(v_align)`
+
+* `v_align`: The vertical align mode. Can be `top`, `middle`, `true-middle`, `baseline`, or `bottom`. *(See qp:setVAlign() for more info.)*
+
+
+### qp:getDefaultVAlign
+
+Gets the default vertical align mode.
+
+`local default_v_align = qp:getDefaultVAlign()`
+
+**Returns:** The default vertical align mode.
 
 
 ### qp:advanceX
@@ -495,7 +533,7 @@ Gets the current vertical padding value.
 
 ### qp:reset
 
-Moves cursor to (0, 0), resets the alignment mode to `left` + `top`, and resets the tab stop index to 1. It does not clear the `qp.tabs` table, nor does it remove bound Text objects. Clears kerning memory.
+Moves cursor to (0, 0), resets the alignment modes to the defaults, and resets the tab stop index to 1. It does not clear the `qp.tabs` table, nor does it remove bound Text objects. Clears kerning memory.
 
 `qp:reset()`
 

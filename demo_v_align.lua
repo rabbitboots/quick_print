@@ -22,8 +22,8 @@ local qp = quickPrint.new(love.graphics.getWidth() - 32, 4)
 
 -- Set up some fonts with different sizes.
 
-local font_ttf_a = love.graphics.newFont("demo_fonts/ttf/DejaVu_Mono/dejavu_mono.ttf", 16)
-local font_ttf_b = love.graphics.newFont("demo_fonts/ttf/DejaVu_Mono/dejavu_mono.ttf", 24)
+local font_ttf_a = love.graphics.newFont("demo_fonts/ttf/DejaVuSansMono/DejaVuSansMono.ttf", 16)
+local font_ttf_b = love.graphics.newFont("demo_fonts/ttf/DejaVuSansMono/DejaVuSansMono.ttf", 24)
 
 
 -- ImageFont metadata

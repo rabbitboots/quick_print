@@ -1,5 +1,5 @@
 -- QuickPrint: A text drawing library for LÖVE.
--- Version: 1.0.7
+-- Version: 1.0.8
 -- LÖVE supported versions: 11.4
 -- See LICENSE, README.md and the demos for more info.
 
@@ -85,34 +85,6 @@ local function _love11TextGuard(text)
 	end
 
 	return false
-end
-
-
-local function getColoredTextWidth(coloredtext, font)
-	-- Assumes the text is a single line.
-
-	--[[
-	NOTE: Internally, LÖVE checks the type of each item. So it's not guaranteed that every odd entry
-	is a table and every even entry is a string.
-	--]]
-
-	local width = 0
-	local last_glyph = false
-	for i = 1, #coloredtext do
-		local chunk = coloredtext[i]
-		if type(chunk) == "string" then
-			width = width + font:getWidth(chunk)
-
-			-- Deal with kerning
-			local new_last_glyph = utf8.codepoint(chunk, utf8.offset(chunk, -1))
-			if last_glyph then
-				width = width + font:getKerning(last_glyph, utf8.codepoint(chunk, 1))
-			end
-			last_glyph = new_last_glyph
-		end
-	end
-
-	return width
 end
 
 
@@ -286,12 +258,14 @@ function quickPrint.new(ref_w, ref_h)
 	-- current tab stop if tabs are enabled.
 	-- Some functions can override it. "justify" applies to formatted-print calls only, and will be
 	-- treated as "left" for plain writes.
-	self.align = "left" -- "left", "center", "right", "justify"
+	self.default_align = "left" -- "left", "center", "right", "justify"
+	self.align = self.default_align
 
 	-- Vertical alignment of text, relative to the cursor. "top" is recommended when using a single font.
 	-- The others might be helpful if you are mixing fonts. If using "middle" or "baseline" with an
 	-- ImageFont, you must set the baseline metric in the font's aux table,
-	self.v_align = "top" -- "top", "middle", "true-middle", "baseline", "bottom"
+	self.default_v_align = "top" -- "top", "middle", "true-middle", "baseline", "bottom"
+	self.v_align = self.default_v_align
 
 	-- Sequence of "tab stops" with a per-pixel granularity, or false to disable tabs.
 	-- Tab stop positions are absolute, not cumulative. They should be ordered smallest to largest.
@@ -409,6 +383,21 @@ function _mt_qp:getAlign()
 end
 
 
+function _mt_qp:setDefaultAlign(align)
+	-- Assertions
+	-- [[
+	if not enum_align[align] then errEnumAlign(1, align) end
+	--]]
+
+	self.default_align = align
+end
+
+
+function _mt_qp:getDefaultAlign()
+	return self.default_align
+end
+
+
 function _mt_qp:setVAlign(v_align)
 	-- Assertions
 	-- [[
@@ -421,6 +410,21 @@ end
 
 function _mt_qp:getVAlign()
 	return self.v_align
+end
+
+
+function _mt_qp:setDefaultVAlign(v_align)
+	-- Assertions
+	-- [[
+	if not enum_v_align[v_align] then errEnumVAlign(1, v_align) end
+	--]]
+
+	self.default_v_align = v_align
+end
+
+
+function _mt_qp:getDefaultVAlign()
+	return self.default_v_align
 end
 
 
@@ -789,8 +793,8 @@ function _mt_qp:reset()
 
 	self.tab_i = 1
 	self:clearKerningMemory()
-	self.align = "left"
-	self.v_align = "top"
+	self.align = self.default_align
+	self.v_align = self.default_v_align
 end
 
 
@@ -1024,8 +1028,6 @@ function _mt_qp:writefSingle(text, align)
 	end
 
 	align = align or self.align
-
-	local text_width = type(text) == "string" and font:getWidth(text) or getColoredTextWidth(text, font)
 
 	if tab_x then
 		if align == "left" then

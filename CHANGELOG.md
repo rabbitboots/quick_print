@@ -1,5 +1,19 @@
 # QuickPrint Changelog
 
+## v1.0.8: 2023-03-17
+* Added methods to set and get defaults for horizontal and vertical alignment. The defaults are applied when calling `qp:reset()` (so there's no immediate change). Wrote `test_default_align.lua` to test them.
+  * `qp:setDefaultAlign(align)`
+  * `qp:getDefaultAlign()`
+  * `qp:setDefaultVAlign(v_align)`
+  * `qp:getDefaultVAlign()`
+
+* Removed internal function `getColoredTextWidth()` because the one method that called it did nothing with the return value. It also did not work correctly with ligatures in LÖVE 12. (As a workaround, you could concatenate all text chunks in the `coloredtext` table and then call `Font:getWidth()` on the complete string).
+
+* Expanded `full_test.lua` with zooming, horizontal scrolling, visualization of the reference width, and the ability to toggle rendering of the TextBatch to the right. `full_test.lua` is a huge, horrible mess, and needs to be broken up into pages sometime.
+
+* Fixed bad font path in `demo_v_align.lua`, caused by changes in v1.0.7.
+
+
 ## v1.0.7: 2023-03-16
 * The core library is functionally identical to v1.0.6. All changes involve demo files and resources:
   * Removed one BMFont due to a Reserved Font Name mismatch in the original TrueType font's license text.

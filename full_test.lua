@@ -1,9 +1,19 @@
 --[[
-	A full test of all features in QuickPrint.
+	A nearly-full* test of all features in QuickPrint.
 
-	NOTE: The tests were renumbered in v1.0.4. Range 1-99 applies to both love.graphics.printf()
-	and TextBatches; Range 100-* skip the TextBatch, either because they don't apply or are
-	impractical to implement.
+	The test is divided into two columns. The left column is drawn directly, while the right
+	column is added to a LÖVE TextBatch and drawn in one call. The right column eventually stops
+	because some tests are not applicable or impractical to implement with a TextBatch.
+
+	Test range 1-99: left and right columns
+	Test range 100-* left column only
+
+	(*) This is in dire need of a rewrite, with pages separated by topic.
+	Missing tests -- see 'test_default_align.lua`
+		qp:setDefaultAlign()
+		qp:getDefaultAlign()
+		qp:setDefaultVAlign()
+		qp:getDefaultVAlign()
 --]]
 
 --[[
@@ -32,7 +42,7 @@ love.keyboard.setKeyRepeat(true)
 local scroll_x = 0
 local scroll_y = 125
 
-local show_tab_lines = false
+local show_tab_lines_and_ref_w = false
 
 local font1 = love.graphics.newFont(12)
 local font1_dupe = love.graphics.newFont(12)
@@ -41,6 +51,10 @@ local font3 = love.graphics.newFont(72)
 local font3_dupe = love.graphics.newFont(72)
 
 local qp = quickPrint.new()
+
+local demo_show_text_object = true
+local demo_scale_div = 16
+local demo_scale = demo_scale_div -- demo_scale_div..(demo_scale_div/8)
 
 
 local C_WHITE = {1, 1, 1, 1}
@@ -94,8 +108,23 @@ function love.keypressed(kc, sc)
 	elseif sc == "pagedown" then
 		scroll_y = scroll_y - 16*8
 
+	elseif sc == "left" then
+		scroll_x = scroll_x + 16
+
+	elseif sc == "right" then
+		scroll_x = scroll_x - 16
+
 	elseif sc == "tab" then
-		show_tab_lines = not show_tab_lines
+		show_tab_lines_and_ref_w = not show_tab_lines_and_ref_w
+
+	elseif sc == "1" then
+		demo_show_text_object = not demo_show_text_object
+
+	elseif sc == "-" then
+		demo_scale = math.max(demo_scale_div, demo_scale - 1)
+
+	elseif sc == "=" then
+		demo_scale = math.min(demo_scale_div*8, demo_scale + 1)
 	end
 end
 
@@ -519,6 +548,9 @@ end
 
 
 function love.draw()
+
+	love.graphics.scale(demo_scale / demo_scale_div, demo_scale / demo_scale_div)
+
 	-- The following should be covered by existing tests:
 	-- qp:reset()
 	-- qp:write(...)
@@ -532,12 +564,25 @@ function love.draw()
 	qp:setScale(1)
 
 	-- Render tab lines
-	if show_tab_lines then
+	if show_tab_lines_and_ref_w then
 		love.graphics.push("all")
+
+		love.graphics.setColor(0, 0, 1, 1)
+		love.graphics.line(
+			scroll_x + qp.ref_w,
+			0,
+			scroll_x + qp.ref_w,
+			love.graphics.getHeight()
+		)
 
 		love.graphics.setColor(1, 0, 0, 1)
 		for i, stop in ipairs(tabs) do
-			love.graphics.line(qp.origin_x + stop, 0, qp.origin_x + stop, love.graphics.getHeight())
+			love.graphics.line(
+				scroll_x + qp.origin_x + stop,
+				0,
+				scroll_x + qp.origin_x + stop,
+				love.graphics.getHeight()
+			)
 		end
 
 		love.graphics.pop()
@@ -628,13 +673,15 @@ function love.draw()
 	quickPrint.aux_db[font1] = old_aux
 
 	-- Right side: print to LÖVE Text object
-	qp:setTextObject(txt)
-	qp:setOrigin(0, 0)
-	qp:reset()
-	txt:clear()
-	testVolley(qp)
-	love.graphics.draw(txt, math.floor(love.graphics.getWidth() / 2 + 0.5), 0)
-	qp:setTextObject()
+	if demo_show_text_object then
+		qp:setTextObject(txt)
+		qp:setOrigin(0, 0)
+		qp:reset()
+		txt:clear()
+		testVolley(qp)
+		love.graphics.draw(txt, math.floor(love.graphics.getWidth() / 2 + 0.5), 0)
+		qp:setTextObject()
+	end
 
 	love.graphics.pop()
 
@@ -642,19 +689,22 @@ function love.draw()
 	qp:setOrigin(0, 0)
 	qp:reset()
 
+	love.graphics.origin()
+
 	love.graphics.setColor(0, 0, 0, 0.75)
 	-- [UPGRADE] Rectangle needs to be slightly larger for the LÖVE 12 font.
 	local rec_h = 100
 	if love_major == 12 then
 		rec_h = 110
 	end
+
 	love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), rec_h)
 	love.graphics.setColor(1, 1, 1, 1)
 
 	qp:moveOrigin(16, 16)
 	qp:reset()
 	qp:setTabs()
-	qp:print("up/down, pgup/pgdn: Scroll\t\tLEFT is printed to screen, RIGHT is added to LÖVE Text Object\n\nSWIPE MOUSE to change tab stop positions\t\tTAB to show virtual tab stops\n\nESCAPE to get outta here")
+	qp:print("up/down, left/right, pgup/pgdn: Scroll\t-/=: Zoom\t1: Toggle TextBatch\nTab: show virtual tab stops + ref_w\nSWIPE MOUSE to change tab stop positions\t\t\n\nESCAPE to get outta here")
 	qp:moveOrigin(love.graphics.getWidth() - 200, 0)
 	qp:print("FPS: ", love.timer.getFPS())
 	qp:print("AvgDelta: ", love.timer.getAverageDelta())

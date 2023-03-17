@@ -658,7 +658,7 @@ As Font objects are used as keys, a font may have only one aux data table assign
 
 ## Tips, Limitations
 
-* QuickPrint does not currently handle DPI scaling or RTL text (LÖVE 12).
+* QuickPrint does not currently handle RTL text (planned for LÖVE 12).
 
 * Text objects do not support multiple simultaneous fonts, so you shouldn't change a Text object's font as you write to it.
 

@@ -1,5 +1,5 @@
 -- QuickPrint: A text drawing library for LÖVE.
--- Version: 1.0.8
+-- Version: 1.0.9
 -- LÖVE supported versions: 11.4
 -- See LICENSE, README.md and the demos for more info.
 
@@ -70,21 +70,30 @@ local function errEnumVAlign(arg_n, val)
 end
 
 
-local function _love11TextGuard(text)
-	-- [UPGRADE] Remove in LÖVE 12.
-	if type(text) == "string" and string.find(text, "%S") then
-		return true
-
-	else
-		for i = 1, #text do
-			local chunk = text[i]
-			if type(chunk) == "string" and string.find(text[i], "%S") then
+-- [UPGRADE] Remove in LÖVE 12.
+local _love11TextGuard
+do
+	local major, minor = love.getVersion()
+	if major <= 11 then
+		_love11TextGuard = function(text)
+			if type(text) == "string" and string.find(text, "%S") then
 				return true
+			else
+				for i = 1, #text do
+					local chunk = text[i]
+					if type(chunk) == "string" and string.find(text[i], "%S") then
+						return true
+					end
+				end
 			end
+
+			return false
+		end
+	else
+		_love11TextGuard = function()
+			return true
 		end
 	end
-
-	return false
 end
 
 
@@ -167,8 +176,7 @@ local function plainWrite(self, str, font, aux)
 
 		-- NOTE: plainWrite() on its own does not move the cursor down to the next line, even if the string contains '\n'.
 		if self.text_object then
-			--if _love11TextGuard(text) then
-			if string.find(str, "%S") then
+			if _love11TextGuard(str) then
 				if self._text_add then
 					self._text_add(self.text_object, str, px, py, 0, scale_x, scale_y, 0, 0, 0, 0)
 				else

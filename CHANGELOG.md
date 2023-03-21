@@ -1,5 +1,9 @@
 # QuickPrint Changelog
 
+## v1.0.9: 2023-03-21
+* Very minor update: changed some internal code that works around a Text object bug in LÖVE 11.x (adding empty or whitespace-only text crashes the application). It's fixed in LÖVE 12, so if that version is detected, the wrapper function is replaced with a dummy that always returns true.
+
+
 ## v1.0.8: 2023-03-17
 * Added methods to set and get defaults for horizontal and vertical alignment. The defaults are applied when calling `qp:reset()` (so there's no immediate change). Wrote `test_default_align.lua` to test them.
   * `qp:setDefaultAlign(align)`

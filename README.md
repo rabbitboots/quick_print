@@ -2,7 +2,7 @@
 
 QuickPrint is a text drawing library for the [LÖVE](https://love2d.org/) Framework.
 
-Version: **v1.0.9**
+Version: **v1.0.9a**
 
 
 ![quickprint\_gh\_1](https://user-images.githubusercontent.com/23288188/168460007-1d08b8ba-3893-4e07-a01b-21a2f3332a8e.png)

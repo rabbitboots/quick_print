@@ -1,5 +1,9 @@
 # QuickPrint Changelog
 
+## v1.0.9a: 2023-03-26
+* Fixed missing Aux Font offsets (`aux.ox`, `aux.oy`) in formatted-print methods.
+
+
 ## v1.0.9: 2023-03-21
 * Very minor update: changed some internal code that works around a Text object bug in LÖVE 11.x (adding empty or whitespace-only text crashes the application). It's fixed in LÖVE 12, so if that version is detected, the wrapper function is replaced with a dummy that always returns true.
 

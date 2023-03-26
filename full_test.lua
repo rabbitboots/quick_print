@@ -637,7 +637,7 @@ function love.draw()
 	-- (102.x) Test aux_db parameters
 	qp:print("(102.1) Test aux_db parameters")
 	qp:down()
-	qp:print("aux.ox, aux.oy")
+	qp:print("plain aux.ox, aux.oy")
 	-- Grab the current aux table and temporarily overwrite it with one that we will modify.
 	local old_aux = quickPrint.getAux(font1)
 	local aux = quickPrint.registerFont(font1)
@@ -665,6 +665,21 @@ function love.draw()
 	aux.oy = -6
 	love.graphics.setFont(font1_dupe); qp:write("oy = -6: M")
 	love.graphics.setFont(font1); qp:write("M")
+	aux.oy = 0
+	aux.sx = 1
+	aux.sy = 1
+
+	qp:down(2)
+	love.graphics.setFont(font1_dupe)
+	qp:print("(102.5) formatted print aux.ox, aux.oy")
+	qp:print("\tox=-5, oy= -8 -- a bit up and off the left edge")
+	aux.ox = -5
+	aux.oy = -8
+	love.graphics.setFont(font1); qp:printfSingle("M1")
+	aux.sx = 2
+	aux.sy = 2
+	love.graphics.setFont(font1); qp:printfSingle("M2")
+	aux.ox = 0
 	aux.oy = 0
 	aux.sx = 1
 	aux.sy = 1

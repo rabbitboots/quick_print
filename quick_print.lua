@@ -1,5 +1,5 @@
 -- QuickPrint: A text drawing library for LÖVE.
--- Version: 1.0.9
+-- Version: 1.0.9a
 -- LÖVE supported versions: 11.4
 -- See LICENSE, README.md and the demos for more info.
 
@@ -205,6 +205,9 @@ local function formattedPrintLogic(self, text, align, font, aux, px, py)
 	local scale_y = self.sy * aux.sy
 	local scaled_w = math.ceil(self.ref_w / math.max(scale_x, 0.0000001)) -- avoid div/0
 	py = py + getVAlignOffset(font, aux, self.v_align) * self.sy
+
+	px = px + aux.ox
+	py = py + aux.oy
 
 	if self.text_object then
 		if _love11TextGuard(text) then

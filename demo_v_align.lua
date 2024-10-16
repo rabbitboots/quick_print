@@ -63,7 +63,7 @@ end
 
 
 function love.update(dt)
-	
+
 end
 
 
@@ -176,7 +176,7 @@ function love.draw()
 	qp:write("M")
 	qp:write("M")
 	qp:write("M ")
-	
+
 	love.graphics.setFont(font_img_a)
 	qp:setVAlign("top")
 	qp:write("M")

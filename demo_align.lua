@@ -139,19 +139,19 @@ function love.draw()
 		end
 		love.graphics.setColor(1, 1, 1, 1)
 	end
-	
+
 	qp:setOrigin(0, 72)
 	qp:setTabs(demo_tabs)
 	qp:reset()
-	
+
 	if #tome > 0 then
 		local lines_bottom = scroll_y + 1 + math.floor(love.graphics.getHeight() / demo_zoom / (main_font:getHeight() * main_font:getLineHeight()))
 		lines_bottom = math.min(lines_bottom, #tome)
-		
+
 		for i = scroll_y, lines_bottom do
 			local ii = i + demo_elapsed
 			love.graphics.setColor(math.abs(math.cos(ii / 4)), math.abs(math.cos(ii / 8)), math.abs(math.cos(ii / 12)), 1)
-			qp:print3(tome[i][1], tome[i][2], tome[i][3])
+			qp:print(tome[i][1], tome[i][2], tome[i][3])
 		end
 	end
 
@@ -160,7 +160,7 @@ function love.draw()
 	love.graphics.setColor(0, 0, 0, 0.75)
 	love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), 48)
 	love.graphics.setColor(1, 1, 1, 1)
-	
+
 	love.graphics.setFont(orig_font)
 	love.graphics.printf("(TAB: show lines\tARROWS: scroll\t(+-)Zoom\tESCAPE: quit)", 0, math.floor(48/2 - orig_font:getHeight()/2), love.graphics.getWidth(), "center")
 end

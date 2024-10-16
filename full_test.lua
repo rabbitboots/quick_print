@@ -400,32 +400,13 @@ local function testVolley(qp)
 	qp:writeSeq(prefab_string_seq)
 	qp:down()
 
-	-- (12.2) qp:write1..4()
-	qp:print("(12.2) qp:write1..4() (next lines)")
-	qp:write1("write1", "dropped")
-	qp:down()
-
-	qp:write2("write1", "write2", "dropped")
-	qp:down()
-
-	qp:write3("write1", "write2", "write3", "dropped")
-	qp:down()
-
-	qp:write4("write1", "write2", "write3", "write4", "dropped")
-
-	qp:down()
+	-- (12.2) -- deleted in 1.1.0
 
 	-- (12.3) qp:printSeq(tbl)
 	qp:print("(12.3) printSeq (next_line)")
 	qp:printSeq(prefab_string_seq)
 
-	-- (12.4) qp:print1..4()
-	qp:print("(12.4) qp:print1..4() (next lines)")
-
-	qp:print1("print1", "dropped")
-	qp:print2("print1", "print2", "dropped")
-	qp:print3("print1", "print2", "print3", "dropped")
-	qp:print4("print1", "print2", "print3", "print4", "dropped")
+	-- (12.4) -- deleted in 1.1.0
 
 	-- (13.1) qp:setReferenceDimensions(ref_w, ref_h), qp:getReferenceDimensions()
 	qp:print("(13.1) setReferenceDimensions / getReferenceDimensions")

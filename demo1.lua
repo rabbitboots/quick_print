@@ -59,12 +59,6 @@ function love.draw()
 	-- Print a varargs list of values without having to concatenate them.
 	qp:print("Al", "to", "ge", "ther")
 
-	-- Some versions of print() with a hardcoded number of arguments.
-	qp:print1("One ", "(dropped)")
-	qp:print2("One ", "Two ", "(dropped)")
-	qp:print3("One ", "Two ", "Three ", "(dropped)")
-	qp:print4("One ", "Two ", "Three ", "Four ", "(dropped)")
-
 	-- Print a sequence of values (anything but nil)
 	qp:printSeq(seq1)
 
@@ -142,7 +136,7 @@ function love.draw()
 
 	qp:print("Lua Memory (KB): ", math.floor(collectgarbage("count") * 10) / 10)
 	--qp:print("Lua Memory (Bytes): ", collectgarbage("count") * 1024)
-	
+
 	qp:setOrigin(love.graphics.getWidth() - 256, PAD)
 	qp:print("Getting to the other demos:")
 	qp:print("love . demo2")

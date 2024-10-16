@@ -1,8 +1,8 @@
+Version: **v1.1.0**
+
 # quick\_print.lua
 
 QuickPrint is a text drawing library for the [LÖVE](https://love2d.org/) Framework.
-
-Version: **v1.0.9a**
 
 
 ![quickprint\_gh\_1](https://user-images.githubusercontent.com/23288188/168460007-1d08b8ba-3893-4e07-a01b-21a2f3332a8e.png)
@@ -122,7 +122,7 @@ Assigns a table of virtual tab stops, or removes any existing tab sequence. Each
 
 `qp:setTabs(tabs)`
 
-* `tabs`: A sequence of tab stops, or false/nil to remove any assigned tabs.
+* `tabs`: A sequence of tab stops, or `false`/`nil` to remove any assigned tabs.
 
 
 ### qp:getTabs
@@ -180,7 +180,11 @@ Sets the default horizontal align mode, which is applied by `qp:reset()`.
 
 * `align`: The LÖVE align mode. Can be `left`, `center`, `right`, or `justify`.
 
-**See:** LÖVE Wiki: [AlignMode](https://love2d.org/wiki/AlignMode)
+**Notes:**
+
+* For plain text, alignment is relative to the current cursor X position. For formatted text, it is relative to the reference width and the current tab stop, if tabs are enabled. Some functions can override alignment. `justify` applies to formatted-print calls only, and will be treated as `left` for plain writes.
+
+* LÖVE Wiki: [AlignMode](https://love2d.org/wiki/AlignMode)
 
 
 ### qp:getDefaultAlign
@@ -200,17 +204,21 @@ Sets the vertical align mode. Text is placed relative to the cursor Y and the cu
 
 * `v_align`: The vertical align mode. Can be `top`, `middle`, `true-middle`, `baseline`, or `bottom`.
 
-The vertical align modes are:
+**Notes:**
 
-`top`: (default) Cursor is at the top of the text.
+* The vertical align modes are:
 
-`middle`: Cursor is at the midpoint between the ascent and baseline metrics.
+  * `top`: (default) Cursor is at the top of the text.
 
-`true-middle`: Cursor is at half the font height.
+  * `middle`: Cursor is at the midpoint between the ascent and baseline metrics.
 
-`bottom`: Cursor is at the bottom of the text.
+  * `true-middle`: Cursor is at half the font height.
 
-**NOTE**: When using `baseline` or `middle` vertical alignment with LÖVE ImageFonts, you must set the baseline metric in the font's aux table. (Except for height, ImageFonts do not have valid vertical metrics.) Otherwise, the text will appear at the wrong vertical position. See *Auxiliary Data* for more info.
+  * `bottom`: Cursor is at the bottom of the text.
+
+* `top` is recommended when using a single font. The other modes may be helpful when mixing fonts.
+
+* If using `middle` or `baseline` with an ImageFont, you must set the baseline metric in the font's aux table, (Except for height, ImageFonts do not have valid vertical metrics.) Otherwise, the text will appear at the wrong vertical position. See *Auxiliary Data* for more info.
 
 
 ### qp:getVAlign
@@ -428,7 +436,7 @@ Gets the current `qp` Y axis origin
 Moves the `qp` origin relative to its current location. Resets cursor position to (0, 0). Resets kerning memory.
 
 `qp:moveOrigin(dx, dy)`:
- 
+
 * `dx`: Amount to add to the current X origin (`qp.origin_x`).
 * `dy`: Amount to add to the current Y origin (`qp.origin_y`).
 
@@ -577,24 +585,6 @@ A version of `qp:write()` that takes one sequence (array table).
 * `tbl`: Table of values to write. Values can be any type except `nil`.
 
 
-### qp:writeN
-
-Versions of `qp:write()` which take exactly 1 to 4 arguments. Additional arguments are ignored.
-
-`qp:write1(s1)`
-
-`qp:write2(s1, s2)`
-
-`qp:write3(s1, s2, s3)`
-
-`qp:write4(s1, s2, s3, s4)`
-
-* `s1`: The first value to write.
-* `s2`: The second value.
-* `s3`: The third value.
-* `s4`: The fourth value.
-
-
 ### qp:print
 
 Writes a varargs list of arguments to a line, and then moves the cursor to the start of the next line.
@@ -611,25 +601,6 @@ Version of `qp:print()` that takes one sequence (array table).
 `qp:printSeq(tbl)`
 
 * `tbl`: Table of values to write. Values can be any type except `nil`.
-
-
-### qp:printN
-
-Versions of `qp:print()` which take exactly 1 to 4 arguments. Additional arguments are ignored.
-
-`qp:print1(s1)`
-
-`qp:print2(s1, s2)`
-
-`qp:print3(s1, s2, s3)`
-
-`qp:print4(s1, s2, s3, s4)`
-
-
-* `s1`: The first value to write.
-* `s2`: The second value.
-* `s3`: The third value.
-* `s4`: The fourth value.
 
 
 ## Formatted Writing Functions
@@ -659,17 +630,21 @@ Like `qp:writefSingle()`, but automatically moves the cursor down one line after
 
 ### qp:printf
 
-Prints one string or `coloredtext` sequence using formatting features provided by `love.graphics.printf()`, and then moves the cursor down to the next free line. Unlike `qp:writefSingle()` and `qp:printfSingle()`, this does not take the virtual tab state into account. It will also generate some throwaway tables and strings in order to calculate the new Y cursor position.
+Prints one string or `coloredtext` sequence using formatting features provided by `love.graphics.printf()`, and then moves the cursor down to the next free line. Unlike `qp:writefSingle()` and `qp:printfSingle()`, this does not take the virtual tab state into account.
 
 `qp:printf(text, align)`
 
 * `text`: The string or `coloredtext` sequence to print.
 * `align`: (`qp.pf_align`) LÖVE AlignMode enum: `"left"`, `"center"`, `"right"` or `"justify"`.
 
+**Notes:**
+
+* This function will generate a temporary table and some strings in order to calculate the new Y cursor position.
+
 
 ## Auxiliary Data
 
-Added in 1.0.6, The `quickPrint.aux_db` table holds supplemental metadata for fonts.
+The `quickPrint.aux_db` table holds supplemental metadata for fonts. It can help with the placement of LÖVE ImageFonts, which do not have a baseline metric. The table uses weak references so that it does not prevent LÖVE Font objects from being garbage collected.
 
 An aux data table contains the following fields:
 
@@ -696,24 +671,10 @@ As Font objects are used as keys, a font may have only one aux data table assign
 
 ## Tips, Limitations
 
-* QuickPrint does not currently handle RTL text (planned for LÖVE 12).
+* QuickPrint does not currently handle RTL text.
 
 * Text objects do not support multiple simultaneous fonts, so you shouldn't change a Text object's font as you write to it.
 
 * QuickPrint is not optimized, and cannot be optimized very much given its design. (It's quick as in *quick and dirty*.) If you have a lot of text that rarely changes, you can save some CPU cycles by printing it to a LÖVE Text object and drawing that, only clearing and rewriting the Text when there's a change. Rendering to a canvas is another option.
 
 * When performing multiple writes to a single line, QuickPrint holds a reference to the last font used. This could prevent it from being cleaned by the garbage collector. The reference is dropped whenever kerning state is cleared, so you can drop it manually by calling `qp:clearKerningMemory()`.
-
-
-## Known Bugs
-
-### One
-* In LÖVE 11.4, adding empty or whitespace-only strings to a Text Object crashes the application.
-  * This is fixed in LÖVE 12.
-  * `_love11TextGuard()` is implemented as a workaround. It will be removed when the library is upgraded to LÖVE 12.
-
-### Two
-* In LÖVE 11.4, small `wraplimit` values given to `Text:addf()` crash the application.
-  * This is fixed in LÖVE 12. `Text:setf()` and `love.graphics.printf()` are not affected.
-  * Workaround: If using `Text:addf()`, find a minimum working value for your font(s) and never make the reference width smaller than that.
-

@@ -11,12 +11,7 @@
 local _lg_newTextBatch
 do
 	local love_major, love_minor, love_revision, love_codename = love.getVersion()
-
-	if love_major == 12 then
-		_lg_newTextBatch = love.graphics.newTextBatch
-	else
-		_lg_newTextBatch = love.graphics.newText
-	end
+	_lg_newTextBatch = love_major == 12 and love.graphics.newTextBatch or love.graphics.newText
 end
 
 
@@ -74,23 +69,6 @@ local function mutateColors(colors)
 			color_set[j] = math.max(0, math.min(color + (love.math.random(-8, 8) / 255), 1))
 		end
 	end
-end
-
-
--- This LÖVE Text object is set up in love.load() and just rendered in love.draw()
-local txt = _lg_newTextBatch(_default_font)
-do
-	local qp2 = quickPrint.new(256)
-	qp2:setTextObject(txt)
-	qp2:setTabs({0,48})
-	qp2:print("Write", "to")
-	qp2:print("a", "bound")
-	qp2:print("LÖVE", "Text")
-	qp2:print("object") -- don't dead open inside
-
-	qp2:setTabs()
-
-	qp2:setTextObject()
 end
 
 
@@ -255,11 +233,28 @@ end
 
 
 local prefab_string_seq = {"Print table sequence: ",
-	"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+	"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
 	"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 }
 
+
 local demo_tabs = {}
+
+
+local txt = _lg_newTextBatch(_default_font)
+do
+	local qp2 = quickPrint.new(256)
+	qp2:setTextObject(txt)
+	qp2:setTabs({0,48})
+	qp2:print("Write", "to")
+	qp2:print("a", "bound")
+	qp2:print("LÖVE", "Text")
+	qp2:print("object")
+
+	qp2:setTabs()
+	qp2:setTextObject()
+end
+
 
 function love.draw()
 	love.graphics.push("all")

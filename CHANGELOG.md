@@ -1,5 +1,13 @@
 # QuickPrint Changelog
 
+## v1.1.0: 2024-10-16
+* Removed `qp:printN()` and `qp:writeN()` function variants that took 1-4 arguments.
+* Removed code that guarded against a crash in LÖVE 11 when adding empty text, or text containing only whitespace, to Text objects. I can't get the crash to happen now on either LÖVE 11.4 or 11.5.
+* Removed documentation of two bugs which I can no longer duplicate: the one mentioned above, and `Text:addf()` crashing when given a low `wraplimit` value.
+* Removed some comments from the main source file, whether because they were obvious (labeling assertions) or they belonged in the README file.
+* Adjusted the style of some comments (no capitalization or period for very short comments).
+
+
 ## v1.0.9a: 2023-03-26
 * Fixed missing Aux Font offsets (`aux.ox`, `aux.oy`) in formatted-print methods.
 

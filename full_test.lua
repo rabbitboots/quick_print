@@ -16,14 +16,10 @@
 		qp:getDefaultVAlign()
 --]]
 
---[[
-	BUGS:
-	#1: Text:addf() crashes in 11.4 if given a very small wraplimit value. Fixed in LÖVE 12.
---]]
-
 
 -- [UPGRADE] Remove once fully migrated to LÖVE 12.
 local love_major, love_minor, love_revision, love_codename = love.getVersion()
+local _lg_newText = love_major == 12 and love.graphics.newTextBatch or love.graphics.newText
 
 
 require("demo_libs.test.strict")
@@ -33,10 +29,6 @@ local quickPrint = require("quick_print")
 love.window.setTitle("QuickPrint: Full Feature Test")
 love.window.updateMode(love.graphics.getWidth(), love.graphics.getHeight(), {resizable = true})
 love.keyboard.setKeyRepeat(true)
-
-
--- This would prevent Bug #1 in the specific case of this test/demo.
---love.window.updateMode(love.graphics.getWidth(), love.graphics.getHeight(), {minwidth=64})
 
 
 local scroll_x = 0
@@ -72,14 +64,8 @@ local prefab_string_seq = {
 local tabs = {}
 local tabs_align_test = {x=0, align="right"}
 
-local love_major = love.getVersion()
-local txt
-if love_major == 12 then
-	txt = love.graphics.newTextBatch(font1)
 
-else
-	txt = love.graphics.newText(font1)
-end
+local txt = _lg_newText(font1)
 
 
 local function drawCursorXLine(qp)

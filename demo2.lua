@@ -169,7 +169,7 @@ function love.keypressed(kc, sc)
 
 	-- Toggle VSync
 	elseif sc == "0" then
-		love.window.setVSync(1 - love.window.getVSync())
+		love.window.setVSync(love.window.getVSync() == 0 and 1 or 0)
 
 	-- Step through garbage collector modes
 	elseif sc == "9" then

@@ -1,5 +1,21 @@
 # QuickPrint Changelog
 
+Date format: **YYYY-MM-DD**
+
+## v1.1.1: 2025-03-14
+* Dropped support for LÖVE 11.4.
+* Fixed a typo in the argument checks for `qp:down()`.
+* Added `qp:getPrintedRange()`.
+* Added `qp:up()`.
+* `qp.line_font`:
+  * Fixed the kerning-clearing behavior. This never worked correctly, because no font was ever assigned to the field.
+  * Encapsulated the font in a weak table, so as not to prevent the garbage collector from destroying the font.
+* `demo2.lua`: Fixed VSync toggle logic.
+* `demo_full.lua`: Added visual checks for `qp.line_font` and `qp:up()`.
+* Made `demo_printed_range.lua`.
+* Minor updates to the README.
+
+
 ## v1.1.0: 2024-10-16
 * Removed `qp:printN()` and `qp:writeN()` function variants that took 1-4 arguments.
 * Removed code that guarded against a crash in LÖVE 11 when adding empty text, or text containing only whitespace, to Text objects. I can't get the crash to happen now on either LÖVE 11.4 or 11.5.

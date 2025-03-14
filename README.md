@@ -1,4 +1,4 @@
-Version: **v1.1.0**
+Version: **v1.1.1**
 
 # quick\_print.lua
 
@@ -378,7 +378,7 @@ Moves the cursor vertically, relative to the current position. Does not reset ke
 
 ### qp:setOrigin
 
-Repositions the `qp` origin (top-left printing area). Resets cursor position to (0, 0). Resets kerning memory.
+Repositions the `qp` origin (top-left printing area). Resets cursor position to (0, 0). Resets kerning memory and the printed range rectangle.
 
 `qp:setOrigin(origin_x, origin_y)`
 
@@ -388,7 +388,7 @@ Repositions the `qp` origin (top-left printing area). Resets cursor position to 
 
 ### qp:setXOrigin
 
-Repositions the `qp` X origin (left printing area). Resets cursor position to (0, 0). Resets kerning memory.
+Repositions the `qp` X origin (left printing area). Resets cursor position to (0, 0). Resets kerning memory and the printed range rectangle.
 
 `qp:setXOrigin(origin_x)`
 
@@ -397,7 +397,7 @@ Repositions the `qp` X origin (left printing area). Resets cursor position to (0
 
 ### qp:setYOrigin
 
-Repositions the `qp` Y origin (top printing area). Resets cursor position to (0, 0). Resets kerning memory.
+Repositions the `qp` Y origin (top printing area). Resets cursor position to (0, 0). Resets kerning memory and the printed range rectangle.
 
 `qp:setYOrigin(origin_y)`
 
@@ -433,7 +433,7 @@ Gets the current `qp` Y axis origin
 
 ### qp:moveOrigin
 
-Moves the `qp` origin relative to its current location. Resets cursor position to (0, 0). Resets kerning memory.
+Moves the `qp` origin relative to its current location. Resets cursor position to (0, 0). Resets kerning memory and the printed range rectangle.
 
 `qp:moveOrigin(dx, dy)`:
 
@@ -539,20 +539,53 @@ Gets the current vertical padding value.
 **Returns:** The vertical padding value (`qp.pad_v`)
 
 
+### qp:getPrintedRange
+
+Gets the cursor's rectangular travel area since the last call to `qp:reset()`, or since any changes have been made to the cursor origin.
+
+`local x1, y1, x2, y2 = _mt_qp:getPrintedRange()`
+
+**Returns:** The furthest left, top, right and bottom cursor positions from origin (0,0).
+
+#### Notes
+
+* This method can be used along with a Text object to determine the rectangular space of what has been printed (to the Text object, internally) before actually drawing it.
+
+
 ### qp:reset
 
-Moves cursor to (0, 0), resets the alignment modes to the defaults, and resets the tab stop index to 1. It does not clear the `qp.tabs` table, nor does it remove bound Text objects. Clears kerning memory.
+Moves the cursor to (0, 0), resetting:
+
+* Alignment modes to the defaults
+* The tab stop index to 1
+* The printed range rectangle
+* Kerning memory
+
+It does not clear the `qp.tabs` table, nor does it remove bound Text objects.
 
 `qp:reset()`
 
 
 ### qp:down
 
-Moves cursor down by a number of lines. Line height is determined by the current font, its line height setting, and the `qp`'s Y scaling. Vertical padding (`qp.pad_v`) is applied once per call. Clears kerning memory.
+Moves the cursor down by a number of lines. Line height is determined by the current font, its line height setting, and the `qp`'s Y scaling. Vertical padding (`qp.pad_v`) is applied once per call. Clears kerning memory.
 
 `qp:down(qty)`
 
 * `qty`: (1) How many lines to move down. Numbers less than 1 are ignored.
+
+
+### qp:up
+
+Like `qp:down()`, but moves the cursor up by a number of lines. Clears kerning memory.
+
+`qp:up(qty)`
+
+* `qty`: (1) How many lines to move up. Numbers less than 1 are ignored.
+
+#### Notes
+
+* This method is intended to help place multiple lines against the bottom of a container or the screen, when the number of lines isn't known ahead of time. Position the cursor, write the lines in reverse order with `qp:write()`, and use `qp:up()` to step upwards.
 
 
 ### qp:clearKerningMemory
@@ -644,7 +677,7 @@ Prints one string or `coloredtext` sequence using formatting features provided b
 
 ## Auxiliary Data
 
-The `quickPrint.aux_db` table holds supplemental metadata for fonts. It can help with the placement of LÖVE ImageFonts, which do not have a baseline metric. The table uses weak references so that it does not prevent LÖVE Font objects from being garbage collected.
+The `quickPrint.aux_db` table holds supplemental metadata for fonts. It can help with the placement of LÖVE ImageFonts, which do not have a baseline metric. The table uses weak references so that it does not prevent LÖVE Font objects from being destroyed by the garbage collector.
 
 An aux data table contains the following fields:
 
@@ -666,7 +699,7 @@ An aux data table contains the following fields:
 
 The ascent, descent and baseline metrics are invalid for LÖVE ImageFonts, so if you want to use baseline vertical alignment with them, you should change those settings in their aux tables.
 
-As Font objects are used as keys, a font may have only one aux data table assigned at a time. The `aux_db` table uses weak keys, so it won't prevent Fonts from being cleaned by the garbage collector.
+As Font objects are used as keys, a font may have only one aux data table assigned at a time.
 
 
 ## Tips, Limitations
@@ -676,5 +709,3 @@ As Font objects are used as keys, a font may have only one aux data table assign
 * Text objects do not support multiple simultaneous fonts, so you shouldn't change a Text object's font as you write to it.
 
 * QuickPrint is not optimized, and cannot be optimized very much given its design. (It's quick as in *quick and dirty*.) If you have a lot of text that rarely changes, you can save some CPU cycles by printing it to a LÖVE Text object and drawing that, only clearing and rewriting the Text when there's a change. Rendering to a canvas is another option.
-
-* When performing multiple writes to a single line, QuickPrint holds a reference to the last font used. This could prevent it from being cleaned by the garbage collector. The reference is dropped whenever kerning state is cleared, so you can drop it manually by calling `qp:clearKerningMemory()`.

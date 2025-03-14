@@ -3,7 +3,7 @@
 
 	The test is divided into two columns. The left column is drawn directly, while the right
 	column is added to a LÖVE TextBatch and drawn in one call. The right column eventually stops
-	because some tests are not applicable or impractical to implement with a TextBatch.
+	because some tests are not applicable, or are impractical to implement with a TextBatch.
 
 	Test range 1-99: left and right columns
 	Test range 100-* left column only
@@ -250,6 +250,22 @@ local function testVolley(qp)
 	qp:print("(6) qp:down(3)")
 	qp:down(3)
 	qp:print("____________")
+
+	-- (6.1) qp:up(qty)
+	qp:print("(6.1) qp:up() (lines are printed in reverse order)")
+	qp:down(5)
+	qp:write("Five")
+	qp:up()
+	qp:write("Four")
+	qp:up()
+	qp:write("Three")
+	qp:up()
+	qp:write("Two")
+	qp:up()
+	qp:write("One")
+	qp:up()
+
+	qp:down(7)
 
 	-- (7.1) qp:advanceX(width)
 	qp:setTabs()
@@ -580,8 +596,15 @@ function love.draw()
 
 	qp:print("(101.1) qp:clearKerningMemory()")
 	love.graphics.setFont(font3)
+
+	-- These two lines should look the same.
 	qp:print("LT")
 
+	qp:write("L") -- v1.1.1: 'qp.line_font' change
+	qp:write("T")
+	qp:down()
+
+	-- This line should have different glyph placement.
 	qp:write("L")
 	qp:clearKerningMemory()
 	qp:write("T")
